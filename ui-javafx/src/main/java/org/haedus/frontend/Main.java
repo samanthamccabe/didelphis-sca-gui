@@ -7,6 +7,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.net.URL;
 
 /**
@@ -20,12 +21,12 @@ public class Main extends Application {
 		URL resource = getClass().getClassLoader().getResource("main.fxml");
 		if (resource != null) {
 			Parent root = FXMLLoader.load(resource);
-			primaryStage.setTitle("Haedus SCA Workbench");
+			primaryStage.setTitle("Didelphis SCA Workbench");
 			primaryStage.setScene(new Scene(root));
 			primaryStage.show();
 		}
 	}
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException, URISyntaxException {
 		launch(args);
 	}
 }

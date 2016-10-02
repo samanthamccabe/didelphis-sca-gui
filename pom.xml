@@ -4,34 +4,21 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.haedus.toolbox</groupId>
-    <artifactId>toolbox-gui</artifactId>
-    <packaging>pom</packaging>
+    <groupId>org.didelphis.toolbox</groupId>
+    <artifactId>toolbox-ui</artifactId>
     <version>0.1.0-SNAPSHOT</version>
+    
+    <packaging>pom</packaging>
 
     <modules>
-        <module>toolbox-frontend</module>
+        <module>ui-servlet-spring</module>
+        <module>ui-javafx</module>
+        <module>ui-web</module>
+        <module>ui-controller</module>
     </modules>
-
-    <dependencies>
-        <dependency>
-            <groupId>org.haedus.toolbox</groupId>
-            <artifactId>toolbox-sca</artifactId>
-            <version>0.6.0</version>
-        </dependency>
-    </dependencies>
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>com.zenjava</groupId>
-                <artifactId>javafx-maven-plugin</artifactId>
-                <version>8.2.0</version>
-                <configuration>
-                    <mainClass>org.haedus.frontend.Main</mainClass>
-                </configuration>
-            </plugin>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -39,29 +26,11 @@
                 <configuration>
                     <source>1.7</source>
                     <target>1.7</target>
-                    <encoding>UTF-8</encoding><!-- try to force encoding -->
+                    <!-- try to force encoding -->
+                    <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
         </plugins>
-
-        <!--
-        <resources>
-            <resource>
-                <filtering>false</filtering>
-                <directory>${basedir}/src/main/java</directory>
-                <includes>
-                    <include>**/*.fxml</include>
-                </includes>
-            </resource>
-            <resource>
-                <filtering>false</filtering>
-                <directory>${basedir}/src/main/resources</directory>
-                <includes>
-                    <include>**/*.*</include>
-                </includes>
-            </resource>
-        </resources>
-        -->
     </build>
-
+    
 </project>
