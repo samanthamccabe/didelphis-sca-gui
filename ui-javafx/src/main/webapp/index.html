@@ -1,11 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<?import java.lang.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.web.*?>
-<?import javafx.scene.layout.Pane?>
-<?import javafx.scene.web.WebView?>
-
+<!DOCTYPE html>
 <!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ~ Copyright (c) 2016 Samantha Fiona McCabe                                  ~
   ~                                                                           ~
@@ -20,10 +13,24 @@
   ~ limitations under the License.                                            ~
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
-<Pane fx:id="controller"
-      fx:controller="org.didelphis.toolbox.frontend.Controller"
-      maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity"
-      minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0"
-      xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
-   <WebView fx:id="webView" prefHeight="400.0" prefWidth="600.0"/>
-</Pane>
+<html lang="en">
+<head>
+    <title>Didelphis Editor</title>
+
+    <meta charset="UTF-8">
+    
+    <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/lib/codemirror.css" />
+
+    <script src="js/lib/codemirror.js"></script>
+    <script src="js/lib/jquery-3.1.1.min.js"></script>
+    
+    <script src="js/main.js"></script>
+
+</head>
+
+<body>
+    <input type="file" id="fileSelect">
+    <textarea id="editorArea"></textarea>
+</body>
+</html>

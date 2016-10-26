@@ -1,11 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<?import java.lang.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.web.*?>
-<?import javafx.scene.layout.Pane?>
-<?import javafx.scene.web.WebView?>
-
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ~ Copyright (c) 2016 Samantha Fiona McCabe                                  ~
   ~                                                                           ~
@@ -20,10 +13,9 @@
   ~ limitations under the License.                                            ~
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
-<Pane fx:id="controller"
-      fx:controller="org.didelphis.toolbox.frontend.Controller"
-      maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity"
-      minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0"
-      xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
-   <WebView fx:id="webView" prefHeight="400.0" prefWidth="600.0"/>
-</Pane>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+    
+</beans>
