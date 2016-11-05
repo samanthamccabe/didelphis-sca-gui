@@ -38,6 +38,16 @@ public class LogView  extends Pane {
 		getChildren().add(webview);
 	}
 
+	public void append(int line, String... data) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(line);
+		for (String d : data) {
+			sb.append(d);
+		}
+		String escaped = StringEscapeUtils.escapeEcmaScript(sb.toString());
+		engine.executeScript("append(\"" + escaped + "\")");
+	}
+
 	public void append(String... data) {
 		StringBuilder sb = new StringBuilder();
 		for (String d : data) {

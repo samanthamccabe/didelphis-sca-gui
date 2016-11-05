@@ -61,9 +61,13 @@ public class Controller implements Initializable {
 		FileChooser chooser = new FileChooser();
 		chooser.setTitle("Open Script");
 		chooser.getExtensionFilters().addAll(
-				new FileChooser.ExtensionFilter("Script Files", "*.dcr", "*.rule")
+				new FileChooser.ExtensionFilter("Script Files", "*.rule", "*.*")
 		);
-		chooser.setInitialDirectory(new File("./"));
+		if (scriptFile != null) {
+			chooser.setInitialDirectory(scriptFile.getParentFile());
+		} else {
+			chooser.setInitialDirectory(new File("./"));
+		}
 		
 		File file = chooser.showOpenDialog(null);
 		if (file != null) {
@@ -83,8 +87,12 @@ public class Controller implements Initializable {
 		chooser.getExtensionFilters().addAll(
 				new FileChooser.ExtensionFilter("Text Files", "*.dcr")
 		);
-		chooser.setInitialDirectory(new File("./"));
-		
+		if (scriptFile != null) {
+			chooser.setInitialDirectory(scriptFile.getParentFile());
+		} else {
+			chooser.setInitialDirectory(new File("./"));
+		}
+
 		File file = chooser.showSaveDialog(null);
 		if (file != null) {
 			try {
@@ -102,14 +110,28 @@ public class Controller implements Initializable {
 		logView.clear();
 		try {
 			long start = System.nanoTime();
-			String fileName = scriptFile.getAbsolutePath();
+			String fileName = scriptFile.toString();
 			StandardScript script = new StandardScript(fileName, code, handler, errorLogger);
 			script.process();
 			long end = System.nanoTime();
 			double elapsed = (end-start) * 1.0E-6;
-			logView.append("Script \"",fileName,"\" ran successfully in ", FORMAT.format(elapsed), " ms");
+			if (errorLogger.isEmpty()) {
+				logView.append("Script \"", fileName, "\" ran successfully in ",
+						FORMAT.format(elapsed), " ms");
+			} else {
+				logView.clear();
+				for (ErrorLogger.Error error : errorLogger) {
+					logView.append(
+							error.getLine(),
+							" \"", error.getScript(),
+							"\" ", error.getData(),
+							" Exception: ", error.getException().toString()
+					);
+				}
+			}
 		} catch (Exception e) {
-			// TODO: errorlogger
+			logView.append("Unhandled error while running script \"",
+					scriptFile.toString(), "\" Cause: ", e.toString());
 		}
 	}
 
@@ -120,12 +142,35 @@ public class Controller implements Initializable {
 		try {
 			long start = System.nanoTime();
 			String fileName = scriptFile.getAbsolutePath();
-			StandardScript script = new StandardScript(fileName, code, handler, errorLogger);
+			StandardScript ignored = new StandardScript(fileName, code, handler, errorLogger);
 			long end = System.nanoTime();
 			double elapsed = (end-start) * 1.0E-6;
-			logView.append("Script \"",fileName,"\" compiled successfully in ", FORMAT.format(elapsed), " ms");
+			logView.append("Script \"", fileName,
+					"\" compiled successfully in ", FORMAT.format(elapsed),
+					" ms");
 		} catch (Exception e) {
-			// TODO: errorlogger
+			logView.append("Unhandled error while compiling script \"",
+					scriptFile.toString(), "\" Cause: ", e.toString());
 		}	
+	}
+
+	public void newFile(ActionEvent actionEvent) {
+		// TODO:
+	}
+
+	public void closeFile(ActionEvent actionEvent) {
+		// TODO:
+	}
+
+	public void saveFile(ActionEvent actionEvent) {
+		if (scriptFile != null) {
+			try {
+				String data = codeEditor.getCodeAndSnapshot();
+				FileUtils.write(scriptFile, data);
+			} catch (IOException e) {
+				logView.append("Error while saving! Exception cited: ",
+						e.toString());
+			}
+		}
 	}
 }
