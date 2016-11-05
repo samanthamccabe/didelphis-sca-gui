@@ -15,22 +15,36 @@
 
 <html lang="en">
 <head>
-    <title>Didelphis Editor</title>
-
     <meta charset="UTF-8">
-    
-    <link rel="stylesheet" href="css/main.css" />
-    <link rel="stylesheet" href="css/lib/codemirror.css" />
-
-    <script src="js/lib/codemirror.js"></script>
-    <script src="js/lib/jquery-3.1.1.min.js"></script>
-    
-    <script src="js/main.js"></script>
-
+    <title>Log View</title>
+    <style type="text/css">
+    body {
+        overflow: hidden;
+    }
+    #list {
+        margin: 0;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+    }
+    </style>
 </head>
-
 <body>
-    <input type="file" id="fileSelect">
-    <textarea id="editorArea"></textarea>
+
+<ul id="list">
+    
+</ul>
+
+<script src="js/jquery-3.1.1.min.js" type="text/javascript" charset="utf-8"></script>
+<script>
+    var append = function (data) {
+        $("#list").append("<ul><pre>"+data+"</pre></ul>");
+    };
+    var clear = function () {
+        $("#list").empty();    
+    };
+</script>
 </body>
 </html>

@@ -17,13 +17,19 @@ package org.didelphis.toolbox.frontend;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.web.WebEngine;
-import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
+import org.apache.commons.io.FileUtils;
+import org.didelphis.io.DiskFileHandler;
+import org.didelphis.io.FileHandler;
+import org.didelphis.soundchange.ErrorLogger;
+import org.didelphis.soundchange.StandardScript;
+import org.didelphis.toolbox.components.CodeEditor;
+import org.didelphis.toolbox.components.LogView;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.text.DecimalFormat;
 import java.util.ResourceBundle;
 
 /**
@@ -31,54 +37,95 @@ import java.util.ResourceBundle;
  * Created: 2/3/2016
  */
 public class Controller implements Initializable {
-
-	private static final int PORT = 8080;
-	private static final String LANDING_PAGE = "localhost:" + PORT + "/index.html";
 	
-	private final Workspace workspace = new Workspace();
+	private static final DecimalFormat FORMAT = new DecimalFormat("#0.00");
 	
 	@FXML
-	WebView webView;
+	private CodeEditor codeEditor;
+	
+	@FXML
+	private LogView logView;
 
-	public Controller() {}
+	private final ErrorLogger errorLogger;
+	
+	private File scriptFile;
+	
+	public Controller() {
+		errorLogger = new ErrorLogger();
+	}
 
 	@Override
-	public void initialize(URL location, ResourceBundle resources) {
-		WebEngine engine = webView.getEngine();
-		engine.load(LANDING_PAGE);
-		engine.reload();
-	}
-	
+	public void initialize(URL location, ResourceBundle resources) {}
+
 	public void openFile(ActionEvent actionEvent) {
-		FileChooser fileChooser = new FileChooser();
-		fileChooser.setTitle("Open Project");
-		File file = fileChooser.showOpenDialog(null);
+		FileChooser chooser = new FileChooser();
+		chooser.setTitle("Open Script");
+		chooser.getExtensionFilters().addAll(
+				new FileChooser.ExtensionFilter("Script Files", "*.dcr", "*.rule")
+		);
+		chooser.setInitialDirectory(new File("./"));
+		
+		File file = chooser.showOpenDialog(null);
 		if (file != null) {
-			//TODO: do things here
 			try {
-				Project project = new Project(file);
-				workspace.addProject(file.getName(), project);
-				
+				scriptFile = file;
+				String data = FileUtils.readFileToString(scriptFile);
+				codeEditor.setCode(data);
 			} catch (IOException e) {
-				e.printStackTrace();
+				logView.append(e.toString());
 			}
 		}
 	}
-
-	public void newFile(ActionEvent actionEvent) {
-		//TODO: how do i make a new a project idk
-	}
-
-	public void saveFile(ActionEvent actionEvent) {
-		FileChooser fileChooser = new FileChooser();
-		fileChooser.setTitle("Save Project");
-		File file = fileChooser.showOpenDialog(null);
+	
+	public void saveAsFile(ActionEvent actionEvent) {
+		FileChooser chooser = new FileChooser();
+		chooser.setTitle("Save Script");
+		chooser.getExtensionFilters().addAll(
+				new FileChooser.ExtensionFilter("Text Files", "*.dcr")
+		);
+		chooser.setInitialDirectory(new File("./"));
+		
+		File file = chooser.showSaveDialog(null);
 		if (file != null) {
-			//TODO: do things here
+			try {
+				String data = codeEditor.getCodeAndSnapshot();
+				FileUtils.write(file, data);
+			} catch (IOException e) {
+				logView.append(e.toString());
+			}
+		}
+	}
+	
+	public void runScript() {
+		String code = codeEditor.getCodeAndSnapshot();
+		FileHandler handler = new DiskFileHandler("UTF-8");
+		logView.clear();
+		try {
+			long start = System.nanoTime();
+			String fileName = scriptFile.getAbsolutePath();
+			StandardScript script = new StandardScript(fileName, code, handler, errorLogger);
+			script.process();
+			long end = System.nanoTime();
+			double elapsed = (end-start) * 1.0E-6;
+			logView.append("Script \"",fileName,"\" ran successfully in ", FORMAT.format(elapsed), " ms");
+		} catch (Exception e) {
+			// TODO: errorlogger
 		}
 	}
 
-	public void closeFile(ActionEvent actionEvent) {
-		//TODO: how do i close a project idk
+	public void compileScript() {
+		String code = codeEditor.getCodeAndSnapshot();
+		FileHandler handler = new DiskFileHandler("UTF-8");
+		logView.clear();
+		try {
+			long start = System.nanoTime();
+			String fileName = scriptFile.getAbsolutePath();
+			StandardScript script = new StandardScript(fileName, code, handler, errorLogger);
+			long end = System.nanoTime();
+			double elapsed = (end-start) * 1.0E-6;
+			logView.append("Script \"",fileName,"\" compiled successfully in ", FORMAT.format(elapsed), " ms");
+		} catch (Exception e) {
+			// TODO: errorlogger
+		}	
 	}
 }

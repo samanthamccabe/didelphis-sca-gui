@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ~ Copyright (c) 2016 Samantha Fiona McCabe                                  ~
   ~                                                                           ~
@@ -12,35 +13,34 @@
   ~ limitations under the License.                                            ~
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
-<web-app id="WebApp_ID" version="2.4"
-         xmlns="http://java.sun.com/xml/ns/j2ee"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee 
-         http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Editor</title>
+    <style type="text/css">
+    body {
+        overflow: hidden;
+    }
+    #editor {
+        margin: 0;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+    }
+    </style>
+</head>
+<body>
 
-    <display-name>Didelphis Toolbox Web UI</display-name>
-    
-     <servlet>
-        <servlet-name>WebRest</servlet-name>
-        <servlet-class>
-            org.springframework.web.servlet.DispatcherServlet
-        </servlet-class>
-        <init-param>
-            <param-name>contextConfigLocation</param-name>
-            <param-value>/WEB-INF/rest-context.xml</param-value>
-        </init-param>
-        <load-on-startup>1</load-on-startup>
-    </servlet>
-    
-    <servlet-mapping>
-        <servlet-name>WebRest</servlet-name>
-        <url-pattern>/rest/*</url-pattern>
-    </servlet-mapping>
-    
-    <listener>
-        <listener-class>
-            org.springframework.web.context.ContextLoaderListener
-        </listener-class>
-    </listener>
-    
-</web-app>
+<pre id="editor">% New Script</pre>
+
+<script src="ace/ace.js" type="text/javascript" charset="utf-8"></script>
+<script>
+  var editor = ace.edit("editor");
+  editor.setTheme("ace/theme/twilight");
+  editor.session.setMode("ace/mode/didelphissca");
+</script>
+
+</body>
+</html>

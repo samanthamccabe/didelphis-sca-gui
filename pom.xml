@@ -30,9 +30,6 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <spring.version>3.2.13.RELEASE</spring.version>
-        <jstl.version>1.2</jstl.version>
-        <jackson.version>1.9.13</jackson.version>
     </properties>
     
     <build>
@@ -45,7 +42,7 @@
                     <source>1.7</source>
                     <target>1.7</target>
                     <!-- try to force encoding -->
-                    <encoding>UTF-8</encoding>
+                    <encoding>${project.build.sourceEncoding}</encoding>
                 </configuration>
             </plugin>
         </plugins>

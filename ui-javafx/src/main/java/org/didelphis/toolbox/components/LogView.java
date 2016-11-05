@@ -12,48 +12,52 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package org.didelphis.toolbox.web;
+package org.didelphis.toolbox.components;
 
-import org.springframework.http.MediaType;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import javafx.scene.layout.Pane;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
+import org.apache.commons.lang3.StringEscapeUtils;
+
+import java.net.URL;
 
 /**
  * Samantha Fiona Morrigan McCabe
- * Created: 9/23/2016
+ * Created: 10/31/2016
  */
-@Controller
-//@RequestMapping("/") // use "/" because the servlet is already at "/rest"
-public class RestService{
+public class LogView  extends Pane {
 
-	// TODO: Could be a bean
-//	private RequestController controller = new RequestController();
+	private final WebView webview;
+	private final WebEngine engine;
+	
+	public LogView() {
+		super();
+		webview = new WebView();
+		engine = webview.getEngine();
+		engine.load(getResourceURL("logView.html"));
+		getChildren().add(webview);
+	}
 
-	@RequestMapping(
-			value = "/open",
-			method = RequestMethod.GET,
-			produces = MediaType.TEXT_PLAIN_VALUE
-	)
-	@ResponseBody
-	public String open(@RequestParam("path") String path) {
-//		return controller.open(path);
-		return ""; // TODO:
+	public void append(String... data) {
+		StringBuilder sb = new StringBuilder();
+		for (String d : data) {
+			sb.append(d);
+		}
+
+		String escaped = StringEscapeUtils.escapeEcmaScript(sb.toString());
+		engine.executeScript("append(\"" + escaped + "\")");
 	}
 	
-	@RequestMapping(
-			value = "/save",
-			method = RequestMethod.POST,
-			consumes = MediaType.APPLICATION_JSON_VALUE,
-			produces = MediaType.TEXT_PLAIN_VALUE
-	)
-	@ResponseBody
-	public String save(Object request) {
-		
-		
-		// TODO:
-		return "save";
+	public void clear() {
+		engine.executeScript("clear()");
+	}
+
+	private static String getResourceURL(String path) {
+		URL resource = CodeEditor.class.getClassLoader().getResource(path);
+		if (resource != null) {
+			return resource.toExternalForm();
+		} else {
+			return null;
+		}
 	}
 }

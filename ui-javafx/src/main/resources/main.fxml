@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.web.*?>
-<?import javafx.scene.layout.Pane?>
-<?import javafx.scene.web.WebView?>
-
 <!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ~ Copyright (c) 2016 Samantha Fiona McCabe                                  ~
   ~                                                                           ~
@@ -20,10 +14,53 @@
   ~ limitations under the License.                                            ~
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
-<Pane fx:id="controller"
-      fx:controller="org.didelphis.toolbox.frontend.Controller"
-      maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity"
-      minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0"
-      xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
-   <WebView fx:id="webView" prefHeight="400.0" prefWidth="600.0"/>
+<?import java.lang.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import org.didelphis.toolbox.components.CodeEditor?>
+<?import org.didelphis.toolbox.components.LogView?>
+
+<Pane maxHeight="Infinity" maxWidth="Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="1080.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.didelphis.toolbox.frontend.Controller">
+    <children>
+        <BorderPane maxHeight="Infinity" maxWidth="Infinity" prefHeight="720.0" prefWidth="1080.0">
+            <top>
+                <MenuBar maxHeight="Infinity" maxWidth="Infinity" prefHeight="25.0" prefWidth="1080.0" BorderPane.alignment="CENTER">
+                    <menus>
+                        <Menu mnemonicParsing="false" text="File">
+                            <items>
+                                <MenuItem mnemonicParsing="false" text="New" />
+                                <MenuItem mnemonicParsing="false" onAction="#openFile" text="Open" />
+                                <MenuItem mnemonicParsing="false" onAction="#saveAsFile" text="Save As" />
+                                <MenuItem mnemonicParsing="false" text="Close" />
+                            </items>
+                        </Menu>
+                        <Menu mnemonicParsing="false" text="Project">
+                            <items>
+                                <MenuItem mnemonicParsing="false" text="Run Script" onAction="#runScript"/>
+                                <MenuItem mnemonicParsing="false" text="Test Script" onAction="#compileScript"/>
+                            </items>
+                        </Menu>
+                        <Menu mnemonicParsing="false" text="Help">
+                            <items>
+                                <MenuItem mnemonicParsing="false" text="About" />
+                            </items>
+                        </Menu>
+                    </menus>
+                </MenuBar>
+            </top>
+            <center>
+                <Pane maxHeight="Infinity" maxWidth="Infinity" prefHeight="690" prefWidth="1080.0" BorderPane.alignment="CENTER">
+                    <CodeEditor fx:id="codeEditor"/>
+                </Pane>
+            </center>
+            <bottom>
+                <TitledPane maxHeight="400" prefHeight="200" animated="false" text="Messages" BorderPane.alignment="CENTER">
+                    <content>
+                        <LogView fx:id="logView"/>
+                    </content>
+                </TitledPane>
+            </bottom>
+        </BorderPane>
+    </children>
 </Pane>
