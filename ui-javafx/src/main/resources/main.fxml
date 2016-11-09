@@ -14,55 +14,73 @@
   ~ limitations under the License.                                            ~
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
+<?import javafx.scene.canvas.*?>
+<?import javafx.scene.web.*?>
+<?import javafx.scene.media.*?>
+<?import javafx.scene.text.*?>
+<?import java.lang.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.Pane?>
+
 <?import org.didelphis.toolbox.components.CodeEditor?>
-<?import org.didelphis.toolbox.components.LogView?>
+
 <Pane maxHeight="Infinity" maxWidth="Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="1080.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.didelphis.toolbox.frontend.Controller">
     <children>
-        <BorderPane maxHeight="Infinity" maxWidth="Infinity" prefHeight="720.0" prefWidth="1080.0">
-            <top>
-                <MenuBar maxHeight="Infinity" maxWidth="Infinity" prefHeight="25.0" prefWidth="1080.0" BorderPane.alignment="CENTER">
+      <VBox prefHeight="720.0" prefWidth="1080.0">
+         <children>
+                <MenuBar maxHeight="Infinity" maxWidth="Infinity" prefHeight="25.0" prefWidth="1080.0">
                     <menus>
-                        <Menu mnemonicParsing="false" text="File">
+                        <Menu text="File">
                             <items>
-                                <MenuItem mnemonicParsing="false" onAction="#newFile" text="New" />
-                                <MenuItem mnemonicParsing="false" onAction="#openFile" text="Open" accelerator="Shortcut+O"/>
-                                <MenuItem mnemonicParsing="false" onAction="#saveFile" text="Save" accelerator="Shortcut+S"/>
-                                <MenuItem mnemonicParsing="false" onAction="#saveAsFile" text="Save As" accelerator="Shortcut+Shift+S"/>
-                                <MenuItem mnemonicParsing="false" onAction="#closeFile" text="Close" />
+                                <MenuItem accelerator="Shortcut+N" onAction="#newFile" text="New" />
+                                <MenuItem accelerator="Shortcut+O" onAction="#openFile" text="Open" />
+                                <MenuItem accelerator="Shortcut+S" onAction="#saveFile" text="Save" />
+                                <MenuItem accelerator="Shortcut+Shift+S" onAction="#saveAsFile" text="Save As" />
                             </items>
                         </Menu>
-                        <Menu mnemonicParsing="false" text="Project">
+                        <Menu text="Project">
                             <items>
-                                <MenuItem mnemonicParsing="false" text="Run Script" onAction="#runScript"/>
-                                <MenuItem mnemonicParsing="false" text="Test Script" onAction="#compileScript"/>
+                                <MenuItem accelerator="Shortcut+R" onAction="#runScript" text="Run Script" />
+                                <MenuItem accelerator="Shortcut+T" onAction="#compileScript" text="Test Script" />
                             </items>
                         </Menu>
-                        <Menu mnemonicParsing="false" text="Help">
+                        <Menu text="Help">
                             <items>
-                                <MenuItem mnemonicParsing="false" text="About" />
+                                <MenuItem text="About" />
                             </items>
                         </Menu>
                     </menus>
                 </MenuBar>
-            </top>
-            <center>
-                <Pane maxHeight="Infinity" maxWidth="Infinity" prefHeight="690" prefWidth="1080.0" BorderPane.alignment="CENTER">
+            <SplitPane dividerPositions="0.29797979797979796" prefHeight="697.0" prefWidth="1080.0">
+              <items>
+                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+                     <children>
+                        <Label text="Project View (todo)" textFill="#606060">
+                           <font>
+                              <Font size="14.0" />
+                           </font>
+                        </Label>
+                     </children></AnchorPane>
+                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="525.0" prefWidth="754.0">
                     <CodeEditor fx:id="codeEditor"/>
-                </Pane>
-            </center>
-            <bottom>
-                <TitledPane maxHeight="400" prefHeight="200" animated="false" text="Messages" BorderPane.alignment="CENTER">
-                    <content>
-                        <LogView fx:id="logView"/>
-                    </content>
-                </TitledPane>
-            </bottom>
-        </BorderPane>
+                </AnchorPane>
+              </items>
+            </SplitPane>
+            <ToolBar prefHeight="40.0" prefWidth="200.0">
+              <items>
+                  <Button mnemonicParsing="false" text="Test Script" />
+                  <Button mnemonicParsing="false" text="Run Script" />
+                  <ChoiceBox fx:id="themePicker" prefWidth="150.0" />
+                  <Spinner fx:id="spinner" />
+              </items>
+            </ToolBar>
+         </children>
+      </VBox>
     </children>
 </Pane>

@@ -15,7 +15,6 @@
 package org.didelphis.toolbox.components;
 
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -58,6 +57,50 @@ public class CodeEditor extends Pane {
 	public String getCodeAndSnapshot() {
 		editingCode = (String) engine.executeScript("editor.getValue();");
 		return editingCode;
+	}
+
+	public void error(String script, int line, String... strings) {
+		log("ERROR", script, line, strings);
+	}
+
+	public void warn(String script, int line, String... strings) {
+		log("WARN", script, line, strings);
+	}
+	
+	public void info(String script, String... strings) {
+		StringBuilder stringbuilder = new StringBuilder();
+		stringbuilder
+				.append("INFO")
+				.append(" [")
+				.append(script)
+				.append("] ");
+		for (String string : strings) {
+			stringbuilder.append(string);
+		}
+		String input = stringbuilder.toString();
+		String escaped = StringEscapeUtils.escapeEcmaScript(input);
+		engine.executeScript("log.insert(\"" + escaped + "\");");
+	}
+	
+	private void log(String code, String script, int line, String... strings) {
+		StringBuilder stringbuilder = new StringBuilder();
+		stringbuilder
+				.append(code)
+				.append(" [")
+				.append(script)
+				.append("] line: ")
+				.append(line)
+				.append(" - ");
+		for (String string : strings) {
+			stringbuilder.append(string);
+		}
+		String input = stringbuilder.toString();
+		String escaped = StringEscapeUtils.escapeEcmaScript(input);
+		engine.executeScript("log.insert(\"" + escaped + "\");");
+	}
+
+	public void clearLog() {
+		engine.executeScript("log.setValue(\"\");");
 	}
 
 	private static String getResourceURL(String path) {
