@@ -21,19 +21,13 @@
 <?import java.lang.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.control.Menu?>
-<?import javafx.scene.control.MenuBar?>
-<?import javafx.scene.control.MenuItem?>
-<?import javafx.scene.control.TitledPane?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.Pane?>
 
 <?import org.didelphis.toolbox.components.CodeEditor?>
 
 <Pane maxHeight="Infinity" maxWidth="Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="1080.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.didelphis.toolbox.frontend.Controller">
     <children>
-      <VBox prefHeight="720.0" prefWidth="1080.0">
-         <children>
+        <VBox prefHeight="720.0" prefWidth="1080.0">
+            <children>
                 <MenuBar maxHeight="Infinity" maxWidth="Infinity" prefHeight="25.0" prefWidth="1080.0">
                     <menus>
                         <Menu text="File">
@@ -57,30 +51,30 @@
                         </Menu>
                     </menus>
                 </MenuBar>
-            <SplitPane dividerPositions="0.29797979797979796" prefHeight="697.0" prefWidth="1080.0">
-              <items>
-                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
-                     <children>
-                        <Label text="Project View (todo)" textFill="#606060">
-                           <font>
-                              <Font size="14.0" />
-                           </font>
-                        </Label>
-                     </children></AnchorPane>
-                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="525.0" prefWidth="754.0">
-                    <CodeEditor fx:id="codeEditor"/>
-                </AnchorPane>
-              </items>
-            </SplitPane>
-            <ToolBar prefHeight="40.0" prefWidth="200.0">
-              <items>
-                  <Button mnemonicParsing="false" text="Test Script" />
-                  <Button mnemonicParsing="false" text="Run Script" />
-                  <ChoiceBox fx:id="themePicker" prefWidth="150.0" />
-                  <Spinner fx:id="spinner" />
-              </items>
-            </ToolBar>
-         </children>
-      </VBox>
+                <SplitPane dividerPositions="0.29797979797979796" prefHeight="697.0" prefWidth="1080.0">
+                    <items>
+                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+                            <children>
+                                <Label text="Project View (todo)" textFill="#606060">
+                                    <font>
+                                        <Font size="14.0" />
+                                    </font>
+                                </Label>
+                            </children></AnchorPane>
+                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="525.0" prefWidth="754.0">
+                            <CodeEditor fx:id="codeEditor"/>
+                        </AnchorPane>
+                    </items>
+                </SplitPane>
+                <ToolBar prefHeight="40.0" prefWidth="200.0">
+                    <items>
+                        <Button mnemonicParsing="false" onAction="#compileScript" text="Test Script" />
+                        <Button mnemonicParsing="false" onAction="#runScript" text="Run Script" />
+                        <ChoiceBox fx:id="themePicker" prefWidth="150.0" />
+                        <Spinner fx:id="spinner" />
+                    </items>
+                </ToolBar>
+            </children>
+        </VBox>
     </children>
 </Pane>

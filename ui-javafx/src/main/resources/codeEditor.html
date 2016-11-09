@@ -46,7 +46,7 @@
         position: absolute;
         width: 92%;
         z-index: 1000;
-        box-shadow: 0 0 1px 2px gray;
+        box-shadow: 0 0 1px 2px black;
     }
     #logEditor {
         height: 100%;
@@ -79,16 +79,18 @@
 <script>
  
   var editor = ace.edit("editor");
-  editor.setTheme("ace/theme/tomorrow_night_eighties");
+  editor.setTheme("ace/theme/monokai");
   editor.setFontSize(14);
   editor.session.setMode("ace/mode/didelphissca");
-  editor.setShowInvisibles(true);   
+//editor.setShowInvisibles(true);
 
   var log = ace.edit("logEditor");
-  log.setTheme("ace/theme/tomorrow_night_eighties");
+  log.container.parentNode.style.display='none';
+  log.setTheme("ace/theme/monokai");
   log.setFontSize(12);
   log.session.setMode("ace/mode/javascript");
   log.session.setUseWorker(false);
+  log.session.setUseWrapMode(true);
   log.setReadOnly(true);
 
 </script>

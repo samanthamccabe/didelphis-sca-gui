@@ -39,10 +39,7 @@ public class CodeEditor extends Pane {
 		engine = webview.getEngine();
 		
 		this.editingCode = "";
-
-		webview.setPrefSize(1080, 690);
 		engine.load(getResourceURL("codeEditor.html"));
-
 		getChildren().add(webview);
 	}
 	
@@ -77,11 +74,22 @@ public class CodeEditor extends Pane {
 		for (String string : strings) {
 			stringbuilder.append(string);
 		}
+		stringbuilder.append("\n");
 		String input = stringbuilder.toString();
 		String escaped = StringEscapeUtils.escapeEcmaScript(input);
 		engine.executeScript("log.insert(\"" + escaped + "\");");
+		showLog();
 	}
-	
+
+	public void setTheme(String name) {
+		engine.executeScript("editor.setTheme(\"ace/theme/"+name+"\");");
+		engine.executeScript("log.setTheme(\"ace/theme/"+name+"\");");
+	}
+
+	public void setFontSize(Number fontSize) {
+		engine.executeScript("editor.setFontSize(" + String.valueOf(fontSize) + ")");
+	}
+
 	private void log(String code, String script, int line, String... strings) {
 		StringBuilder stringbuilder = new StringBuilder();
 		stringbuilder
@@ -94,9 +102,19 @@ public class CodeEditor extends Pane {
 		for (String string : strings) {
 			stringbuilder.append(string);
 		}
+		stringbuilder.append("\n");
 		String input = stringbuilder.toString();
 		String escaped = StringEscapeUtils.escapeEcmaScript(input);
 		engine.executeScript("log.insert(\"" + escaped + "\");");
+		showLog();
+	}
+
+	public void showLog() {
+		engine.executeScript("log.container.parentNode.style.display='';");
+	}
+
+	public void hideLog() {
+		engine.executeScript("log.container.parentNode.style.display='none';");
 	}
 
 	public void clearLog() {

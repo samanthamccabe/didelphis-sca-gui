@@ -14,9 +14,15 @@
 
 package org.didelphis.toolbox.frontend;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.Spinner;
+import javafx.scene.control.SpinnerValueFactory;
 import javafx.stage.FileChooser;
 import org.apache.commons.io.FileUtils;
 import org.didelphis.io.DiskFileHandler;
@@ -29,6 +35,10 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
 
 /**
@@ -40,6 +50,21 @@ public class Controller implements Initializable {
 	private static final DecimalFormat FORMAT = new DecimalFormat("#0.00");
 	private static final FileChooser.ExtensionFilter SCRIPT_EXTENSION_FILTER =
 			new FileChooser.ExtensionFilter("Script Files", "*.rule", "*.*");
+
+	private static List<String> THEMES = new ArrayList<>();
+	static {
+		THEMES.add("Monokai");
+		THEMES.add("Kuroir");
+		THEMES.add("Eclipse");
+		THEMES.add("Twilight");
+//		THEMES.add("Tomorrow Night Eighties");
+	}
+
+	@FXML
+	public ChoiceBox<String> themePicker;
+
+	@FXML
+	public Spinner<Integer> spinner;
 
 	@FXML
 	private CodeEditor codeEditor;
@@ -53,7 +78,28 @@ public class Controller implements Initializable {
 	}
 
 	@Override
-	public void initialize(URL location, ResourceBundle resources) {}
+	public void initialize(URL location, ResourceBundle resources) {
+		themePicker.setItems(FXCollections.observableArrayList(THEMES));
+		themePicker.getSelectionModel().selectedIndexProperty().addListener(
+				new ChangeListener<Number>() {
+					@Override
+					public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+						String name = THEMES.get((int) newValue);
+						codeEditor.setTheme(name.toLowerCase().replace("\\s","_"));
+					}
+				}
+		);
+		themePicker.setValue("Monokai");
+
+		spinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(4,24,14));
+		spinner.setEditable(true);
+		spinner.valueProperty().addListener(new ChangeListener<Integer>() {
+			@Override
+			public void changed(ObservableValue<? extends Integer> observable, Integer oldValue, Integer newValue) {
+				codeEditor.setFontSize(newValue);
+			}
+		});
+	}
 
 	public void openFile(ActionEvent actionEvent) {
 		FileChooser chooser = chooser("Open Script");
