@@ -14,12 +14,11 @@
 
 package org.didelphis.toolbox.frontend;
 
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
@@ -36,9 +35,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.ResourceBundle;
 
 /**
@@ -52,22 +49,48 @@ public class Controller implements Initializable {
 			new FileChooser.ExtensionFilter("Script Files", "*.rule", "*.*");
 
 	private static List<String> THEMES = new ArrayList<>();
+	
 	static {
-		THEMES.add("Monokai");
-		THEMES.add("Kuroir");
+		THEMES.add("Ambiance");
+		THEMES.add("Chaos");
+		THEMES.add("Chrome");
+		THEMES.add("Clouds");
+		THEMES.add("Clouds Midnight");
+		THEMES.add("Cobalt");
+		THEMES.add("Crimson Editor");
+		THEMES.add("Dawn");
+		THEMES.add("Dreamweaver");
 		THEMES.add("Eclipse");
+		THEMES.add("GitHub");
+		THEMES.add("Idle Fingers");
+		THEMES.add("IPlastic");
+		THEMES.add("Katzenmilch");
+		THEMES.add("KR Theme");
+		THEMES.add("Kuroir");
+		THEMES.add("Merbivore");
+		THEMES.add("Merbivore Soft");
+		THEMES.add("Mono Industrial");
+		THEMES.add("Monokai");
+		THEMES.add("Pastel On Dark");
+		THEMES.add("Solarized Dark");
+		THEMES.add("Solarized Light");
+		THEMES.add("SQLServer");
+		THEMES.add("Terminal");
+		THEMES.add("Textmate");
+		THEMES.add("Tomorrow");
+		THEMES.add("Tomorrow Night");
+		THEMES.add("Tomorrow Night Blue");
+		THEMES.add("Tomorrow Night Bright");
+		THEMES.add("Tomorrow Night Eighties");
 		THEMES.add("Twilight");
-//		THEMES.add("Tomorrow Night Eighties");
+		THEMES.add("Vibrant Ink");
+		THEMES.add("XCode");
 	}
 
-	@FXML
-	public ChoiceBox<String> themePicker;
-
-	@FXML
-	public Spinner<Integer> spinner;
-
-	@FXML
-	private CodeEditor codeEditor;
+	@FXML private ChoiceBox<String> themePicker;
+	@FXML private Spinner<Integer> fontSizeSpinner;
+	@FXML private CodeEditor codeEditor;
+	@FXML private CheckBox hiddenCharBox;
 
 	private final ErrorLogger errorLogger;
 	
@@ -79,26 +102,21 @@ public class Controller implements Initializable {
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
+		themePicker.setValue("Monokai");
 		themePicker.setItems(FXCollections.observableArrayList(THEMES));
 		themePicker.getSelectionModel().selectedIndexProperty().addListener(
-				new ChangeListener<Number>() {
-					@Override
-					public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-						String name = THEMES.get((int) newValue);
-						codeEditor.setTheme(name.toLowerCase().replace("\\s","_"));
-					}
+				(observable, oldValue, newValue) -> {
+					String name = THEMES.get((int) newValue);
+					String replace = name.toLowerCase().replace("\\s", "_");
+					codeEditor.setTheme(replace);
 				}
 		);
-		themePicker.setValue("Monokai");
 
-		spinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(4,24,14));
-		spinner.setEditable(true);
-		spinner.valueProperty().addListener(new ChangeListener<Integer>() {
-			@Override
-			public void changed(ObservableValue<? extends Integer> observable, Integer oldValue, Integer newValue) {
-				codeEditor.setFontSize(newValue);
-			}
-		});
+		fontSizeSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(4,24,14));
+		fontSizeSpinner.setEditable(true);
+		fontSizeSpinner.valueProperty().addListener((observable, oldValue, newValue) -> codeEditor.setFontSize(newValue));
+
+		hiddenCharBox.selectedProperty().addListener((observable, oldValue, newValue) -> codeEditor.setShowHiddenCharacters(newValue));
 	}
 
 	public void openFile(ActionEvent actionEvent) {
@@ -147,7 +165,7 @@ public class Controller implements Initializable {
 				String data = codeEditor.getCodeAndSnapshot();
 				FileUtils.write(scriptFile, data);
 			} catch (IOException e) {
-				codeEditor.error(scriptFile.toString(), -1, e.toString());
+				codeEditor.error(getFileName(), -1, e.toString());
 			}
 		}
 	}
@@ -158,7 +176,7 @@ public class Controller implements Initializable {
 		codeEditor.clearLog();
 		try {
 			long start = System.nanoTime();
-			String fileName = scriptFile.toString();
+			String fileName = getFileName();
 			StandardScript script = new StandardScript(fileName, code, handler, errorLogger);
 			script.process();
 			long end = System.nanoTime();
@@ -170,9 +188,13 @@ public class Controller implements Initializable {
 				generateErrorLog();
 			}
 		} catch (Exception e) {
-			codeEditor.error(scriptFile.toString(), -1,
+			codeEditor.error(getFileName(), -1,
 					"Unhandled error while running script! ", e.toString());
 		}
+	}
+
+	private String getFileName() {
+		return scriptFile == null ? "null" : scriptFile.toString();
 	}
 
 	public void compileScript() {
@@ -192,7 +214,7 @@ public class Controller implements Initializable {
 				generateErrorLog();
 			}
 		} catch (Exception e) {
-			codeEditor.error(scriptFile.toString(), -1,
+			codeEditor.error(getFileName(), -1,
 					"Unhandled error while compiling script! ", e.toString());
 		}	
 	}

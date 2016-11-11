@@ -14,7 +14,7 @@
 
 package org.didelphis.toolbox.components;
 
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -25,7 +25,7 @@ import java.net.URL;
  * Samantha Fiona Morrigan McCabe
  * Created: 10/29/2016
  */
-public class CodeEditor extends Pane {
+public class CodeEditor extends StackPane {
 		
 	private final WebView webview;
 	private final WebEngine engine;
@@ -54,6 +54,14 @@ public class CodeEditor extends Pane {
 	public String getCodeAndSnapshot() {
 		editingCode = (String) engine.executeScript("editor.getValue();");
 		return editingCode;
+	}
+	
+	public void setShowHiddenCharacters(boolean b) {
+		engine.executeScript("editor.setShowInvisibles(" + b + ")");
+	}
+	
+	public void setUseLineWrap(boolean b) {
+		engine.executeScript("log.session.setUseWrapMode(" + b + ");");
 	}
 
 	public void error(String script, int line, String... strings) {

@@ -14,64 +14,63 @@
   ~ limitations under the License.                                            ~
   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 
-<?import javafx.scene.canvas.*?>
-<?import javafx.scene.web.*?>
-<?import javafx.scene.media.*?>
-<?import javafx.scene.text.*?>
-<?import java.lang.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
 <?import org.didelphis.toolbox.components.CodeEditor?>
 
-<Pane maxHeight="Infinity" maxWidth="Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="1080.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.didelphis.toolbox.frontend.Controller">
+<Pane xmlns="http://javafx.com/javafx/8.0.112-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.didelphis.toolbox.frontend.Controller">
     <children>
-        <VBox prefHeight="720.0" prefWidth="1080.0">
+        <VBox>
             <children>
-                <MenuBar maxHeight="Infinity" maxWidth="Infinity" prefHeight="25.0" prefWidth="1080.0">
+                <MenuBar>
                     <menus>
                         <Menu text="File">
                             <items>
-                                <MenuItem accelerator="Shortcut+N" onAction="#newFile" text="New" />
-                                <MenuItem accelerator="Shortcut+O" onAction="#openFile" text="Open" />
-                                <MenuItem accelerator="Shortcut+S" onAction="#saveFile" text="Save" />
+                                <MenuItem accelerator="Shortcut+N"       onAction="#newFile"    text="New" />
+                                <MenuItem accelerator="Shortcut+O"       onAction="#openFile"   text="Open" />
+                                <MenuItem accelerator="Shortcut+S"       onAction="#saveFile"   text="Save" />
                                 <MenuItem accelerator="Shortcut+Shift+S" onAction="#saveAsFile" text="Save As" />
                             </items>
                         </Menu>
                         <Menu text="Project">
                             <items>
-                                <MenuItem accelerator="Shortcut+R" onAction="#runScript" text="Run Script" />
+                                <MenuItem accelerator="Shortcut+R" onAction="#runScript"     text="Run Script" />
                                 <MenuItem accelerator="Shortcut+T" onAction="#compileScript" text="Test Script" />
                             </items>
                         </Menu>
+                        <!--
                         <Menu text="Help">
                             <items>
                                 <MenuItem text="About" />
                             </items>
                         </Menu>
+                        -->
                     </menus>
                 </MenuBar>
-                <SplitPane dividerPositions="0.29797979797979796" prefHeight="697.0" prefWidth="1080.0">
+                <CodeEditor fx:id="codeEditor"/>
+                <ToolBar >
                     <items>
-                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
-                            <children>
-                                <Label text="Project View (todo)" textFill="#606060">
-                                    <font>
-                                        <Font size="14.0" />
-                                    </font>
-                                </Label>
-                            </children></AnchorPane>
-                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="525.0" prefWidth="754.0">
-                            <CodeEditor fx:id="codeEditor"/>
-                        </AnchorPane>
-                    </items>
-                </SplitPane>
-                <ToolBar prefHeight="40.0" prefWidth="200.0">
-                    <items>
-                        <Button mnemonicParsing="false" onAction="#compileScript" text="Test Script" />
-                        <Button mnemonicParsing="false" onAction="#runScript" text="Run Script" />
-                        <ChoiceBox fx:id="themePicker" prefWidth="150.0" />
-                        <Spinner fx:id="spinner" />
+                        <Button onAction="#compileScript" text="Test Script" />
+                        <Button onAction="#runScript"     text="Run Script" />
+                        
+                        <Separator orientation="VERTICAL" prefHeight="20.0" prefWidth="30" />
+                        
+                        <ChoiceBox fx:id="themePicker"      prefWidth="150.0" />
+                        <Spinner   fx:id="fontSizeSpinner"  prefWidth="50.0" />
+                        
+                        <Separator orientation="VERTICAL" prefHeight="20.0" prefWidth="30" />
+                        <CheckBox fx:id="hiddenCharBox" text="Show Hidden" />
                     </items>
                 </ToolBar>
             </children>

@@ -52,15 +52,16 @@
         height: 100%;
         position: relative;
         width: 100%;
+        margin: 0;
     }
     #closeBtn {
-        background: rgba(245, 146, 146, 0.5);
-        border: 1px solid #F48A8A;
+        background: rgba(255, 64, 64, 0.5);
+        border: 1px solid #F06060;
         border-radius: 50%;
-        padding: 7px;
+        padding: 6px;
         position: absolute;
-        right: -8px;
-        top: -8px;
+        right: -7px;
+        top: -7px;
         z-index: 1000;
     }
     </style>
@@ -70,6 +71,7 @@
 <div id="editorContainer">
     <pre id="editor">% New Script</pre>
 </div>
+
 <div id="logContainer">
     <span id="closeBtn" onclick="this.parentNode.style.display='none'"></span>
     <pre id="logEditor">&gt;&gt;</pre>
@@ -77,12 +79,10 @@
 
 <script src="ace/ace.js" type="text/javascript" charset="utf-8"></script>
 <script>
- 
   var editor = ace.edit("editor");
   editor.setTheme("ace/theme/monokai");
   editor.setFontSize(14);
   editor.session.setMode("ace/mode/didelphissca");
-//editor.setShowInvisibles(true);
 
   var log = ace.edit("logEditor");
   log.container.parentNode.style.display='none';
@@ -92,7 +92,7 @@
   log.session.setUseWorker(false);
   log.session.setUseWrapMode(true);
   log.setReadOnly(true);
-
+  log.setShowPrintMargin(false);
 </script>
 
 </body>
