@@ -173,7 +173,9 @@ public class Controller implements Initializable {
 	public void runScript() {
 		String code = codeEditor.getCodeAndSnapshot();
 		FileHandler handler = new DiskFileHandler("UTF-8");
+		errorLogger.clear();
 		codeEditor.clearLog();
+		codeEditor.clearErrorMarkers();
 		try {
 			long start = System.nanoTime();
 			String fileName = getFileName();
@@ -188,22 +190,25 @@ public class Controller implements Initializable {
 				generateErrorLog();
 			}
 		} catch (Exception e) {
+			StringBuilder sb = new StringBuilder(e.toString());
+			for (StackTraceElement element : e.getStackTrace()) {
+				sb.append("\n");
+				sb.append(element);
+			}
 			codeEditor.error(getFileName(), -1,
-					"Unhandled error while running script! ", e.toString());
+					"Unhandled error while running script! ", sb.toString());
 		}
 	}
-
-	private String getFileName() {
-		return scriptFile == null ? "null" : scriptFile.toString();
-	}
-
+	
 	public void compileScript() {
 		String code = codeEditor.getCodeAndSnapshot();
 		FileHandler handler = new DiskFileHandler("UTF-8");
+		errorLogger.clear();
 		codeEditor.clearLog();
+		codeEditor.clearErrorMarkers();
 		try {
 			long start = System.nanoTime();
-			String fileName = scriptFile.getAbsolutePath();
+			String fileName = getFileName();
 			StandardScript ignored = new StandardScript(fileName, code, handler, errorLogger);
 			long end = System.nanoTime();
 			double elapsed = (end-start) * 1.0E-6;
@@ -214,8 +219,13 @@ public class Controller implements Initializable {
 				generateErrorLog();
 			}
 		} catch (Exception e) {
+			StringBuilder sb = new StringBuilder(e.toString());
+			for (StackTraceElement element : e.getStackTrace()) {
+				sb.append("\n");
+				sb.append(element);
+			}
 			codeEditor.error(getFileName(), -1,
-					"Unhandled error while compiling script! ", e.toString());
+					"Unhandled error while compiling script! ", sb.toString());
 		}	
 	}
 	
@@ -227,7 +237,7 @@ public class Controller implements Initializable {
 					error.getScript(),
 					error.getLine(),
 					error.getData(),
-					" Exception: ", error.getException().toString()
+					error.getException()
 			);
 		}
 	}
@@ -242,5 +252,9 @@ public class Controller implements Initializable {
 			chooser.setInitialDirectory(new File("./"));
 		}
 		return chooser;
+	}
+	
+	private String getFileName() {
+		return scriptFile == null ? "null" : scriptFile.toString();
 	}
 }

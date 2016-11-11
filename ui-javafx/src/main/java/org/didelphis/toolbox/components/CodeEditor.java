@@ -38,6 +38,8 @@ public class CodeEditor extends StackPane {
 		webview = new WebView();
 		engine = webview.getEngine();
 		
+		engine.setOnError(event -> System.err.println(event.toString()));
+		
 		this.editingCode = "";
 		engine.load(getResourceURL("codeEditor.html"));
 		getChildren().add(webview);
@@ -63,9 +65,21 @@ public class CodeEditor extends StackPane {
 	public void setUseLineWrap(boolean b) {
 		engine.executeScript("log.session.setUseWrapMode(" + b + ");");
 	}
-
 	public void error(String script, int line, String... strings) {
 		log("ERROR", script, line, strings);
+	}
+	
+	public void error(String script, int line, String data, Exception e) {
+		// Range(Number startRow, Number startColumn, Number endRow, Number endColumn)
+		int numLines = data.split("(\r\n?|\n)").length;
+		int from = line - 1;
+		int to = numLines + from - 1;
+		engine.executeScript("addMarker("+from + ", 0, " + to + ", 1);");
+		log("ERROR", script, line, data, " ", e == null ? "" : e.toString());
+	}
+	
+	public void clearErrorMarkers() {
+		engine.executeScript("clearMarkers();");
 	}
 
 	public void warn(String script, int line, String... strings) {
@@ -126,7 +140,7 @@ public class CodeEditor extends StackPane {
 	}
 
 	public void clearLog() {
-		engine.executeScript("log.setValue(\"\");");
+		engine.executeScript("log.setValue(\"\",0);");
 	}
 
 	private static String getResourceURL(String path) {

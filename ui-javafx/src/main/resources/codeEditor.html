@@ -21,6 +21,11 @@
     body {
         overflow: hidden;
     }
+    .myMarker {
+        position:absolute;
+        background:rgba(255,64,64,0.5);
+        z-index:20
+    }
     #editorContainer {
         margin: 0;
         position: absolute;
@@ -79,6 +84,8 @@
 
 <script src="ace/ace.js" type="text/javascript" charset="utf-8"></script>
 <script>
+  var Range = ace.require('ace/range').Range;
+
   var editor = ace.edit("editor");
   editor.setTheme("ace/theme/monokai");
   editor.setFontSize(14);
@@ -93,6 +100,26 @@
   log.session.setUseWrapMode(true);
   log.setReadOnly(true);
   log.setShowPrintMargin(false);
+  
+  var addMarker = function(a, b, c, d) {
+    editor.session.addMarker(new Range(a, b, c, d), "myMarker", "fullLine", false);  
+  };
+  
+  var clearMarkers = function () {
+    var markers = editor.session.getMarkers(false);
+    var cleared = [];
+    for (var key in markers) {
+      if (markers.hasOwnProperty(key)) {
+        var element = markers[key];
+        if (element.clazz === "myMarker") {
+            editor.session.removeMarker(element.id);
+            cleared.push(element.id);
+        }
+      }
+    }
+    return JSON.stringify(cleared);
+  };
+  
 </script>
 
 </body>
