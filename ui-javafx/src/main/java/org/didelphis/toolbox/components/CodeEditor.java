@@ -14,12 +14,15 @@
 
 package org.didelphis.toolbox.components;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import javafx.scene.layout.StackPane;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import org.apache.commons.lang3.StringEscapeUtils;
 
 import java.net.URL;
+import java.util.List;
 
 /**
  * Samantha Fiona Morrigan McCabe
@@ -80,6 +83,16 @@ public class CodeEditor extends StackPane {
 	
 	public void clearErrorMarkers() {
 		engine.executeScript("clearMarkers();");
+		engine.executeScript("editor.session.clearAnnotations();");
+	}
+
+	public void addAnnotations(List<Annotation> annotations) {
+		try {
+			String val = new ObjectMapper().writeValueAsString(annotations);
+			execute("editor.session.setAnnotations("+val+")");
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void warn(String script, int line, String... strings) {
@@ -99,17 +112,17 @@ public class CodeEditor extends StackPane {
 		stringbuilder.append("\n");
 		String input = stringbuilder.toString();
 		String escaped = StringEscapeUtils.escapeEcmaScript(input);
-		engine.executeScript("log.insert(\"" + escaped + "\");");
+		execute("log.insert(\"" + escaped + "\");");
 		showLog();
 	}
 
 	public void setTheme(String name) {
-		engine.executeScript("editor.setTheme(\"ace/theme/"+name+"\");");
-		engine.executeScript("log.setTheme(\"ace/theme/"+name+"\");");
+		execute("editor.setTheme(\"ace/theme/"+name+"\");");
+		execute("log.setTheme(\"ace/theme/"+name+"\");");
 	}
 
 	public void setFontSize(Number fontSize) {
-		engine.executeScript("editor.setFontSize(" + String.valueOf(fontSize) + ")");
+		execute("editor.setFontSize(" + String.valueOf(fontSize) + ")");
 	}
 
 	private void log(String code, String script, int line, String... strings) {
@@ -127,20 +140,24 @@ public class CodeEditor extends StackPane {
 		stringbuilder.append("\n");
 		String input = stringbuilder.toString();
 		String escaped = StringEscapeUtils.escapeEcmaScript(input);
-		engine.executeScript("log.insert(\"" + escaped + "\");");
+		execute("log.insert(\"" + escaped + "\");");
 		showLog();
 	}
 
 	public void showLog() {
-		engine.executeScript("log.container.parentNode.style.display='';");
+		execute("log.container.parentNode.style.display='';");
 	}
 
 	public void hideLog() {
-		engine.executeScript("log.container.parentNode.style.display='none';");
+		execute("log.container.parentNode.style.display='none';");
 	}
 
 	public void clearLog() {
-		engine.executeScript("log.setValue(\"\",0);");
+		execute("log.setValue(\"\",0);");
+	}
+
+	private Object execute(String command) {
+		return engine.executeScript(command);
 	}
 
 	private static String getResourceURL(String path) {

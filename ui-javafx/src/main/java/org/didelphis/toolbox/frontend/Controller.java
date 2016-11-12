@@ -24,10 +24,12 @@ import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.stage.FileChooser;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.didelphis.io.DiskFileHandler;
 import org.didelphis.io.FileHandler;
 import org.didelphis.soundchange.ErrorLogger;
 import org.didelphis.soundchange.StandardScript;
+import org.didelphis.toolbox.components.Annotation;
 import org.didelphis.toolbox.components.CodeEditor;
 
 import java.io.File;
@@ -232,6 +234,7 @@ public class Controller implements Initializable {
 
 	private void generateErrorLog() {
 		codeEditor.clearLog();
+		List<Annotation> annotations = new ArrayList<>();
 		for (ErrorLogger.Error error : errorLogger) {
 			codeEditor.error(
 					error.getScript(),
@@ -239,6 +242,15 @@ public class Controller implements Initializable {
 					error.getData(),
 					error.getException()
 			);
+			// TODO: should not use exception
+			String message = error.getException().getMessage();
+			String html4 = StringEscapeUtils.escapeHtml4(
+					message);
+			annotations.add(Annotation.errorHTML(
+					error.getLine()-1,
+					"<pre>"+ html4 +"</pre>"
+					));
+			codeEditor.addAnnotations(annotations);
 		}
 	}
 	
