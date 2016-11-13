@@ -17,54 +17,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Editor</title>
-    <style type="text/css">
-    body {
-        overflow: hidden;
-    }
-    #editorContainer {
-        margin: 0;
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        z-index: 0;
-    }
-    #editor {
-        margin: 0;
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        z-index: 0;
-    }
-    #logContainer {
-        bottom: 0;
-        height: 80px;
-        margin: 0 4%;
-        position: absolute;
-        width: 92%;
-        z-index: 1000;
-        box-shadow: 0 0 1px 2px black;
-    }
-    #logEditor {
-        height: 100%;
-        position: relative;
-        width: 100%;
-        margin: 0;
-    }
-    #closeBtn {
-        background: rgba(255, 64, 64, 0.5);
-        border: 1px solid #F06060;
-        border-radius: 50%;
-        padding: 6px;
-        position: absolute;
-        right: -7px;
-        top: -7px;
-        z-index: 1000;
-    }
-    </style>
+    <link rel="stylesheet" type="text/css" href="css/didelphis.css">
 </head>
 <body>
 
@@ -77,23 +30,8 @@
     <pre id="logEditor">&gt;&gt;</pre>
 </div>
 
-<script src="ace/ace.js" type="text/javascript" charset="utf-8"></script>
-<script>
-  var editor = ace.edit("editor");
-  editor.setTheme("ace/theme/monokai");
-  editor.setFontSize(14);
-  editor.session.setMode("ace/mode/didelphissca");
-
-  var log = ace.edit("logEditor");
-  log.container.parentNode.style.display='none';
-  log.setTheme("ace/theme/monokai");
-  log.setFontSize(12);
-  log.session.setMode("ace/mode/javascript");
-  log.session.setUseWorker(false);
-  log.session.setUseWrapMode(true);
-  log.setReadOnly(true);
-  log.setShowPrintMargin(false);
-</script>
+<script src="ace/ace.js"       type="text/javascript" charset="utf-8"></script>
+<script src="js/codeEditor.js" type="text/javascript" charset="utf-8"></script>
 
 </body>
 </html>

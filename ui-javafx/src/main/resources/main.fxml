@@ -22,58 +22,53 @@
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.Spinner?>
-<?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.ToolBar?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.Pane?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.StackPane?>
 <?import org.didelphis.toolbox.components.CodeEditor?>
 
-<Pane xmlns="http://javafx.com/javafx/8.0.112-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.didelphis.toolbox.frontend.Controller">
-    <children>
-        <VBox>
-            <children>
-                <MenuBar>
-                    <menus>
-                        <Menu text="File">
-                            <items>
-                                <MenuItem accelerator="Shortcut+N"       onAction="#newFile"    text="New" />
-                                <MenuItem accelerator="Shortcut+O"       onAction="#openFile"   text="Open" />
-                                <MenuItem accelerator="Shortcut+S"       onAction="#saveFile"   text="Save" />
-                                <MenuItem accelerator="Shortcut+Shift+S" onAction="#saveAsFile" text="Save As" />
-                            </items>
-                        </Menu>
-                        <Menu text="Project">
-                            <items>
-                                <MenuItem accelerator="Shortcut+R" onAction="#runScript"     text="Run Script" />
-                                <MenuItem accelerator="Shortcut+T" onAction="#compileScript" text="Test Script" />
-                            </items>
-                        </Menu>
-                        <!--
-                        <Menu text="Help">
-                            <items>
-                                <MenuItem text="About" />
-                            </items>
-                        </Menu>
-                        -->
-                    </menus>
-                </MenuBar>
-                <CodeEditor fx:id="codeEditor"/>
-                <ToolBar >
-                    <items>
-                        <Button onAction="#compileScript" text="Test Script" />
-                        <Button onAction="#runScript"     text="Run Script" />
-                        
-                        <Separator orientation="VERTICAL" prefHeight="20.0" prefWidth="30" />
-                        
-                        <ChoiceBox fx:id="themePicker"      prefWidth="150.0" />
-                        <Spinner   fx:id="fontSizeSpinner"  prefWidth="50.0" />
-                        
-                        <Separator orientation="VERTICAL" prefHeight="20.0" prefWidth="30" />
-                        <CheckBox fx:id="hiddenCharBox" text="Show Hidden" />
-                    </items>
-                </ToolBar>
-            </children>
-        </VBox>
-    </children>
-</Pane>
+<StackPane xmlns="http://javafx.com/javafx/8.0.112-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.didelphis.toolbox.frontend.Controller">
+  <children>
+      <BorderPane>
+         <top>
+        <MenuBar BorderPane.alignment="CENTER">
+          <menus>
+            <Menu text="File">
+              <items>
+                <MenuItem accelerator="Shortcut+N" onAction="#newFile" text="New" />
+                <MenuItem accelerator="Shortcut+O" onAction="#openFile" text="Open" />
+                <MenuItem accelerator="Shortcut+S" onAction="#saveFile" text="Save" />
+                <MenuItem accelerator="Shortcut+Shift+S" onAction="#saveAsFile" text="Save As" />
+              </items>
+            </Menu>
+            <Menu text="Project">
+              <items>
+                <MenuItem accelerator="Shortcut+R" onAction="#runScript" text="Run Script" />
+                <MenuItem accelerator="Shortcut+T" onAction="#compileScript" text="Test Script" />
+              </items>
+            </Menu>
+          </menus>
+        </MenuBar>
+         </top>
+         <center>
+        <CodeEditor fx:id="codeEditor" BorderPane.alignment="CENTER" />
+         </center>
+         <bottom>
+        <ToolBar BorderPane.alignment="CENTER">
+          <items>
+              <Button onAction="#compileScript" text="Test Script" />
+              <Button onAction="#runScript" text="Run Script" />
+
+              <Separator orientation="VERTICAL" prefHeight="20.0" prefWidth="30" />
+
+              <ChoiceBox fx:id="themePicker" prefWidth="150.0" />
+              <Spinner fx:id="fontSizeSpinner" prefWidth="100.0" />
+
+              <Separator orientation="VERTICAL" prefHeight="20.0" prefWidth="30" />
+              <CheckBox fx:id="hiddenCharBox" text="Show Hidden" />
+          </items>
+        </ToolBar>
+         </bottom>
+      </BorderPane>
+  </children>
+</StackPane>

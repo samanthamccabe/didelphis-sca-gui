@@ -22,12 +22,15 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.didelphis.io.DiskFileHandler;
 import org.didelphis.io.FileHandler;
 import org.didelphis.soundchange.ErrorLogger;
 import org.didelphis.soundchange.StandardScript;
+import org.didelphis.toolbox.components.Annotation;
 import org.didelphis.toolbox.components.CodeEditor;
 
 import java.io.File;
@@ -49,7 +52,7 @@ public class Controller implements Initializable {
 			new FileChooser.ExtensionFilter("Script Files", "*.rule", "*.*");
 
 	private static List<String> THEMES = new ArrayList<>();
-	
+
 	static {
 		THEMES.add("Ambiance");
 		THEMES.add("Chaos");
@@ -102,12 +105,12 @@ public class Controller implements Initializable {
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		themePicker.setValue("Monokai");
+		themePicker.setValue("Chaos");
 		themePicker.setItems(FXCollections.observableArrayList(THEMES));
 		themePicker.getSelectionModel().selectedIndexProperty().addListener(
 				(observable, oldValue, newValue) -> {
 					String name = THEMES.get((int) newValue);
-					String replace = name.toLowerCase().replace("\\s", "_");
+					String replace = name.toLowerCase().replaceAll("\\s", "_");
 					codeEditor.setTheme(replace);
 				}
 		);
@@ -173,7 +176,9 @@ public class Controller implements Initializable {
 	public void runScript() {
 		String code = codeEditor.getCodeAndSnapshot();
 		FileHandler handler = new DiskFileHandler("UTF-8");
+		errorLogger.clear();
 		codeEditor.clearLog();
+		codeEditor.clearErrorMarkers();
 		try {
 			long start = System.nanoTime();
 			String fileName = getFileName();
@@ -182,54 +187,64 @@ public class Controller implements Initializable {
 			long end = System.nanoTime();
 			double elapsed = (end-start) * 1.0E-6;
 			if (errorLogger.isEmpty()) {
-				codeEditor.info(fileName, " ran successfully in ",
-						FORMAT.format(elapsed), " ms");
+				codeEditor.info(fileName, "ran successfully in ", FORMAT.format(elapsed), " ms");
 			} else {
 				generateErrorLog();
 			}
 		} catch (Exception e) {
+			StringBuilder sb = new StringBuilder(e.toString());
+			for (StackTraceElement element : e.getStackTrace()) {
+				sb.append("\n");
+				sb.append(element);
+			}
 			codeEditor.error(getFileName(), -1,
-					"Unhandled error while running script! ", e.toString());
+					"Unhandled error while running script! " + sb.toString());
 		}
 	}
-
-	private String getFileName() {
-		return scriptFile == null ? "null" : scriptFile.toString();
-	}
-
+	
 	public void compileScript() {
 		String code = codeEditor.getCodeAndSnapshot();
 		FileHandler handler = new DiskFileHandler("UTF-8");
+		errorLogger.clear();
 		codeEditor.clearLog();
+		codeEditor.clearErrorMarkers();
 		try {
 			long start = System.nanoTime();
-			String fileName = scriptFile.getAbsolutePath();
+			String fileName = getFileName();
 			StandardScript ignored = new StandardScript(fileName, code, handler, errorLogger);
 			long end = System.nanoTime();
 			double elapsed = (end-start) * 1.0E-6;
 			if (errorLogger.isEmpty()) {
-				codeEditor.info(fileName, " compiled successfully in ",
+				codeEditor.info(fileName, "compiled successfully in ",
 						FORMAT.format(elapsed), " ms");
 			} else {
 				generateErrorLog();
 			}
 		} catch (Exception e) {
+			StringBuilder sb = new StringBuilder(e.toString());
+			for (StackTraceElement element : e.getStackTrace()) {
+				sb.append("\n");
+				sb.append(element);
+			}
 			codeEditor.error(getFileName(), -1,
-					"Unhandled error while compiling script! ", e.toString());
-		}	
+					"Unhandled error while compiling script! " + sb.toString());
+		}
 	}
-	
 
 	private void generateErrorLog() {
 		codeEditor.clearLog();
-		for (ErrorLogger.Error error : errorLogger) {
-			codeEditor.error(
-					error.getScript(),
-					error.getLine(),
-					error.getData(),
-					" Exception: ", error.getException().toString()
+		List<Annotation> annotations = new ArrayList<>();
+		for (ErrorLogger.Error err : errorLogger) {
+			codeEditor.error(err.getScript(), err.getLine(), err.getData());
+			String message = err.getMessage();
+			String html4 = StringEscapeUtils.escapeHtml4(message);
+			int start = err.getLine() - 1;
+			int end = start + err.getData().split("\\r|\\r?\\n").length - 1;
+			annotations.add(Annotation.errorHTML(
+					start, end, "<pre>"+ html4 +"</pre>")
 			);
 		}
+		codeEditor.addAnnotations(annotations);
 	}
 	
 	private FileChooser chooser(String title) {
@@ -242,5 +257,9 @@ public class Controller implements Initializable {
 			chooser.setInitialDirectory(new File("./"));
 		}
 		return chooser;
+	}
+		
+	private String getFileName() {
+		return scriptFile == null ? "null" : scriptFile.toString();
 	}
 }

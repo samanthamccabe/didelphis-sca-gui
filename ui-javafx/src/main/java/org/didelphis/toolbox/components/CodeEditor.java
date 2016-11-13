@@ -14,12 +14,15 @@
 
 package org.didelphis.toolbox.components;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import javafx.scene.layout.StackPane;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import org.apache.commons.lang3.StringEscapeUtils;
 
 import java.net.URL;
+import java.util.List;
 
 /**
  * Samantha Fiona Morrigan McCabe
@@ -37,6 +40,8 @@ public class CodeEditor extends StackPane {
 		super();
 		webview = new WebView();
 		engine = webview.getEngine();
+		
+		engine.setOnError(event -> System.err.println(event.toString()));
 		
 		this.editingCode = "";
 		engine.load(getResourceURL("codeEditor.html"));
@@ -63,70 +68,78 @@ public class CodeEditor extends StackPane {
 	public void setUseLineWrap(boolean b) {
 		engine.executeScript("log.session.setUseWrapMode(" + b + ");");
 	}
-
-	public void error(String script, int line, String... strings) {
-		log("ERROR", script, line, strings);
-	}
-
-	public void warn(String script, int line, String... strings) {
-		log("WARN", script, line, strings);
+	
+	public void error(String script, int line, String data) {
+		log("ERROR", script, line, data);
 	}
 	
+	public void clearErrorMarkers() {
+		engine.executeScript("clearMarkers();");
+		engine.executeScript("editor.session.clearAnnotations();");
+	}
+
+	public void addAnnotations(List<Annotation> annotations) {
+		try {
+			String val = new ObjectMapper().writeValueAsString(annotations);
+			execute("setAnnotations("+val+")");
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+	}
+		
 	public void info(String script, String... strings) {
 		StringBuilder stringbuilder = new StringBuilder();
-		stringbuilder
-				.append("INFO")
-				.append(" [")
-				.append(script)
-				.append("] ");
+		stringbuilder.append("[INFO] ").append(script).append(" ");
 		for (String string : strings) {
 			stringbuilder.append(string);
 		}
 		stringbuilder.append("\n");
 		String input = stringbuilder.toString();
 		String escaped = StringEscapeUtils.escapeEcmaScript(input);
-		engine.executeScript("log.insert(\"" + escaped + "\");");
+		execute("log.insert(\"" + escaped + "\");");
 		showLog();
 	}
 
 	public void setTheme(String name) {
-		engine.executeScript("editor.setTheme(\"ace/theme/"+name+"\");");
-		engine.executeScript("log.setTheme(\"ace/theme/"+name+"\");");
+		execute("editor.setTheme(\"ace/theme/"+name+"\");");
+		execute("log.setTheme(\"ace/theme/"+name+"\");");
 	}
 
 	public void setFontSize(Number fontSize) {
-		engine.executeScript("editor.setFontSize(" + String.valueOf(fontSize) + ")");
+		execute("editor.setFontSize(" + String.valueOf(fontSize) + ")");
 	}
 
-	private void log(String code, String script, int line, String... strings) {
-		StringBuilder stringbuilder = new StringBuilder();
-		stringbuilder
-				.append(code)
-				.append(" [")
-				.append(script)
-				.append("] line: ")
-				.append(line)
-				.append(" - ");
-		for (String string : strings) {
-			stringbuilder.append(string);
-		}
-		stringbuilder.append("\n");
-		String input = stringbuilder.toString();
-		String escaped = StringEscapeUtils.escapeEcmaScript(input);
-		engine.executeScript("log.insert(\"" + escaped + "\");");
+	private void log(String code, String script, int line, String data) {
+		String n = String.valueOf(line);
+		String escaped = StringEscapeUtils.escapeEcmaScript(
+				build("[", code, "] line: ", n, " ", script, " | ", data, "\n")
+		);
+		execute("log.insert(\"" + escaped + "\");");
 		showLog();
 	}
 
 	public void showLog() {
-		engine.executeScript("log.container.parentNode.style.display='';");
+		execute("log.container.parentNode.style.display='';");
 	}
 
 	public void hideLog() {
-		engine.executeScript("log.container.parentNode.style.display='none';");
+		execute("log.container.parentNode.style.display='none';");
 	}
 
 	public void clearLog() {
-		engine.executeScript("log.setValue(\"\");");
+		execute("log.setValue(\"\",0);");
+	}
+
+	private Object execute(String command) {
+		return engine.executeScript(command);
+	}
+	
+	private static String build(String... strings) {
+		StringBuilder sb = new StringBuilder();
+		for (String string : strings) {
+			sb.append(string);
+		}
+		return sb.toString();
 	}
 
 	private static String getResourceURL(String path) {

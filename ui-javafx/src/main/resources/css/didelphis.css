@@ -1,0 +1,57 @@
+body {
+    overflow: hidden;
+}
+
+.errorMarker {
+    position: absolute;
+    background: rgba(255,64,64,0.5);
+    z-index: 20
+}
+
+#editorContainer {
+    position: absolute;
+    margin:    0;
+    top:       0;
+    bottom:    0;
+    left:      0;
+    right:     0;
+    z-index:   0;
+}
+
+#editor {
+    position: absolute;
+    margin:    0;
+    top:       0;
+    bottom:    0;
+    left:      0;
+    right:     0;
+    z-index:   0;
+}
+
+#logContainer {
+    position: absolute;
+    bottom: 0;
+    height: 80px;
+    width: 92%;
+    margin: 0 4%;
+    z-index: 1000;
+    box-shadow: 0 0 1px 2px black;
+}
+
+#logEditor {
+    position: relative;
+    height: 100%;
+    width:  100%;
+    margin: 0;
+}
+
+#closeBtn {
+    position: absolute;
+    background: rgba(255, 64, 64, 0.5);
+    border: 1px solid #F06060;
+    border-radius: 50%;
+    padding:  6px;
+    right:   -7px;
+    top:     -7px;
+    z-index: 1000;
+}
