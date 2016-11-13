@@ -95,7 +95,6 @@ public class CodeEditor extends StackPane {
 		}
 		stringbuilder.append("\n");
 		String input = stringbuilder.toString();
-		System.out.println(input);
 		String escaped = StringEscapeUtils.escapeEcmaScript(input);
 		execute("log.insert(\"" + escaped + "\");");
 		showLog();
