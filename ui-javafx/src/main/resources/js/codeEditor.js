@@ -29,7 +29,7 @@ var log = ace.edit("logEditor");
 log.container.parentNode.style.display="none";
 log.setTheme("ace/theme/chaos");
 log.setFontSize(12);
-log.session.setMode("ace/mode/javascript");
+log.session.setMode("ace/mode/didelphislog");
 log.session.setUseWorker(false);
 log.session.setUseWrapMode(true);
 log.setReadOnly(true);

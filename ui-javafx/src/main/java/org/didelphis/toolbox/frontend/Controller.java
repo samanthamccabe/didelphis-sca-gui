@@ -186,7 +186,7 @@ public class Controller implements Initializable {
 			long end = System.nanoTime();
 			double elapsed = (end-start) * 1.0E-6;
 			if (errorLogger.isEmpty()) {
-				codeEditor.info(fileName, " ran successfully in ", FORMAT.format(elapsed), " ms");
+				codeEditor.info(fileName, "ran successfully in ", FORMAT.format(elapsed), " ms");
 			} else {
 				generateErrorLog();
 			}
@@ -214,7 +214,7 @@ public class Controller implements Initializable {
 			long end = System.nanoTime();
 			double elapsed = (end-start) * 1.0E-6;
 			if (errorLogger.isEmpty()) {
-				codeEditor.info(fileName, " compiled successfully in ",
+				codeEditor.info(fileName, "compiled successfully in ",
 						FORMAT.format(elapsed), " ms");
 			} else {
 				generateErrorLog();
