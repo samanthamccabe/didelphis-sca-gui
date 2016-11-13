@@ -22,6 +22,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -51,7 +52,7 @@ public class Controller implements Initializable {
 			new FileChooser.ExtensionFilter("Script Files", "*.rule", "*.*");
 
 	private static List<String> THEMES = new ArrayList<>();
-	
+
 	static {
 		THEMES.add("Ambiance");
 		THEMES.add("Chaos");
