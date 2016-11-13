@@ -1,5 +1,7 @@
 package org.didelphis.toolbox.components;
 
+import org.jetbrains.annotations.Contract;
+
 /**
  * Created by samantha on 11/11/16.
  * Used to interface with Ace editor annotations
@@ -7,27 +9,29 @@ package org.didelphis.toolbox.components;
 public class Annotation {
 
 	private final int row;
+	private final int end;
 	private final String text;
 	private final String html;
 	private final Type type;
-
-	public static Annotation errorHTML(int row, String html) {
-		return new Annotation(row, null, html, Type.error);
+	
+	public static Annotation errorHTML(int row, int end, String html) {
+		return new Annotation(row, end, null, html, Type.error);
 	}
 
-	public static Annotation warnHTML(int row, String html) {
-		return new Annotation(row, null, html, Type.warn);
+	public static Annotation warnHTML(int row, int end, String html) {
+		return new Annotation(row, end, null, html, Type.warn);
 	}
 
-	public static Annotation infoHTML(int row, String html) {
-		return new Annotation(row, null, html, Type.info);
+	public static Annotation infoHTML(int row, int end, String html) {
+		return new Annotation(row, end, null, html, Type.info);
 	}
 
-	private Annotation(int row, String text, String html, Type type) {
+	private Annotation(int row, int rowSpan, String text, String html, Type type) {
 		this.row = row;
 		this.text = text;
 		this.html = html;
 		this.type = type;
+		this.end = rowSpan;
 	}
 
 	public int getRow() {
@@ -49,7 +53,10 @@ public class Annotation {
 	private enum Type {
 		error,
 		warn,
-		info;
+		info
+	}
 
+	public int getEnd() {
+		return end;
 	}
 }

@@ -104,12 +104,12 @@ public class Controller implements Initializable {
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		themePicker.setValue("Monokai");
+		themePicker.setValue("Chaos");
 		themePicker.setItems(FXCollections.observableArrayList(THEMES));
 		themePicker.getSelectionModel().selectedIndexProperty().addListener(
 				(observable, oldValue, newValue) -> {
 					String name = THEMES.get((int) newValue);
-					String replace = name.toLowerCase().replace("\\s", "_");
+					String replace = name.toLowerCase().replaceAll("\\s", "_");
 					codeEditor.setTheme(replace);
 				}
 		);
@@ -186,8 +186,7 @@ public class Controller implements Initializable {
 			long end = System.nanoTime();
 			double elapsed = (end-start) * 1.0E-6;
 			if (errorLogger.isEmpty()) {
-				codeEditor.info(fileName, " ran successfully in ",
-						FORMAT.format(elapsed), " ms");
+				codeEditor.info(fileName, " ran successfully in ", FORMAT.format(elapsed), " ms");
 			} else {
 				generateErrorLog();
 			}
@@ -198,7 +197,7 @@ public class Controller implements Initializable {
 				sb.append(element);
 			}
 			codeEditor.error(getFileName(), -1,
-					"Unhandled error while running script! ", sb.toString());
+					"Unhandled error while running script! " + sb.toString());
 		}
 	}
 	
@@ -227,31 +226,24 @@ public class Controller implements Initializable {
 				sb.append(element);
 			}
 			codeEditor.error(getFileName(), -1,
-					"Unhandled error while compiling script! ", sb.toString());
-		}	
+					"Unhandled error while compiling script! " + sb.toString());
+		}
 	}
-	
 
 	private void generateErrorLog() {
 		codeEditor.clearLog();
 		List<Annotation> annotations = new ArrayList<>();
-		for (ErrorLogger.Error error : errorLogger) {
-			codeEditor.error(
-					error.getScript(),
-					error.getLine(),
-					error.getData(),
-					error.getException()
-			);
-			// TODO: should not use exception
-			String message = error.getException().getMessage();
-			String html4 = StringEscapeUtils.escapeHtml4(
-					message);
+		for (ErrorLogger.Error err : errorLogger) {
+			codeEditor.error(err.getScript(), err.getLine(), err.getData());
+			String message = err.getMessage();
+			String html4 = StringEscapeUtils.escapeHtml4(message);
+			int start = err.getLine() - 1;
+			int end = start + err.getData().split("\\r|\\r?\\n").length - 1;
 			annotations.add(Annotation.errorHTML(
-					error.getLine()-1,
-					"<pre>"+ html4 +"</pre>"
-					));
-			codeEditor.addAnnotations(annotations);
+					start, end, "<pre>"+ html4 +"</pre>")
+			);
 		}
+		codeEditor.addAnnotations(annotations);
 	}
 	
 	private FileChooser chooser(String title) {
@@ -265,7 +257,7 @@ public class Controller implements Initializable {
 		}
 		return chooser;
 	}
-	
+		
 	private String getFileName() {
 		return scriptFile == null ? "null" : scriptFile.toString();
 	}

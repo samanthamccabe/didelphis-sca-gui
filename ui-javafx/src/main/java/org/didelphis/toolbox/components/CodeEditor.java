@@ -68,17 +68,9 @@ public class CodeEditor extends StackPane {
 	public void setUseLineWrap(boolean b) {
 		engine.executeScript("log.session.setUseWrapMode(" + b + ");");
 	}
-	public void error(String script, int line, String... strings) {
-		log("ERROR", script, line, strings);
-	}
 	
-	public void error(String script, int line, String data, Exception e) {
-		// Range(Number startRow, Number startColumn, Number endRow, Number endColumn)
-		int numLines = data.split("(\r\n?|\n)").length;
-		int from = line - 1;
-		int to = numLines + from - 1;
-		engine.executeScript("addMarker("+from + ", 0, " + to + ", 1);");
-		log("ERROR", script, line, data, " ", e == null ? "" : e.toString());
+	public void error(String script, int line, String data) {
+		log("ERROR", script, line, data);
 	}
 	
 	public void clearErrorMarkers() {
@@ -89,23 +81,15 @@ public class CodeEditor extends StackPane {
 	public void addAnnotations(List<Annotation> annotations) {
 		try {
 			String val = new ObjectMapper().writeValueAsString(annotations);
-			execute("editor.session.setAnnotations("+val+")");
+			execute("setAnnotations("+val+")");
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
 	}
-
-	public void warn(String script, int line, String... strings) {
-		log("WARN", script, line, strings);
-	}
-	
+		
 	public void info(String script, String... strings) {
 		StringBuilder stringbuilder = new StringBuilder();
-		stringbuilder
-				.append("INFO")
-				.append(" [")
-				.append(script)
-				.append("] ");
+		stringbuilder.append("[INFO] ").append(script).append(" ");
 		for (String string : strings) {
 			stringbuilder.append(string);
 		}
@@ -125,21 +109,11 @@ public class CodeEditor extends StackPane {
 		execute("editor.setFontSize(" + String.valueOf(fontSize) + ")");
 	}
 
-	private void log(String code, String script, int line, String... strings) {
-		StringBuilder stringbuilder = new StringBuilder();
-		stringbuilder
-				.append(code)
-				.append(" [")
-				.append(script)
-				.append("] line: ")
-				.append(line)
-				.append(" - ");
-		for (String string : strings) {
-			stringbuilder.append(string);
-		}
-		stringbuilder.append("\n");
-		String input = stringbuilder.toString();
-		String escaped = StringEscapeUtils.escapeEcmaScript(input);
+	private void log(String code, String script, int line, String data) {
+		String n = String.valueOf(line);
+		String escaped = StringEscapeUtils.escapeEcmaScript(
+				build("[", code, "] line: ", n, " ", script, " - ", data, "\n")
+		);
 		execute("log.insert(\"" + escaped + "\");");
 		showLog();
 	}
@@ -158,6 +132,14 @@ public class CodeEditor extends StackPane {
 
 	private Object execute(String command) {
 		return engine.executeScript(command);
+	}
+	
+	private static String build(String... strings) {
+		StringBuilder sb = new StringBuilder();
+		for (String string : strings) {
+			sb.append(string);
+		}
+		return sb.toString();
 	}
 
 	private static String getResourceURL(String path) {
