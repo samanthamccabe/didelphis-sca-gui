@@ -22,23 +22,29 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
-import javafx.scene.layout.VBox;
+import javafx.scene.control.TableView;
 import javafx.stage.FileChooser;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.didelphis.io.DiskFileHandler;
 import org.didelphis.io.FileHandler;
+import org.didelphis.phonetic.Lexicon;
 import org.didelphis.soundchange.ErrorLogger;
 import org.didelphis.soundchange.StandardScript;
+import org.didelphis.soundchange.command.LexiconIOCommand;
 import org.didelphis.toolbox.components.Annotation;
 import org.didelphis.toolbox.components.CodeEditor;
+import org.didelphis.toolbox.components.LexiconViewer;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
 
 /**
@@ -89,7 +95,7 @@ public class Controller implements Initializable {
 		THEMES.add("Vibrant Ink");
 		THEMES.add("XCode");
 	}
-
+	@FXML private LexiconViewer lexiconTableView;
 	@FXML private ChoiceBox<String> themePicker;
 	@FXML private Spinner<Integer> fontSizeSpinner;
 	@FXML private CodeEditor codeEditor;
@@ -115,6 +121,7 @@ public class Controller implements Initializable {
 				}
 		);
 
+
 		fontSizeSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(4,24,14));
 		fontSizeSpinner.setEditable(true);
 		fontSizeSpinner.valueProperty().addListener((observable, oldValue, newValue) -> codeEditor.setFontSize(newValue));
@@ -130,6 +137,7 @@ public class Controller implements Initializable {
 				scriptFile = file;
 				String data = FileUtils.readFileToString(scriptFile);
 				codeEditor.setCode(data);
+				compileScript();
 			} catch (IOException e) {
 				codeEditor.error(file.toString(), -1, e.toString());
 			}
@@ -211,7 +219,7 @@ public class Controller implements Initializable {
 		try {
 			long start = System.nanoTime();
 			String fileName = getFileName();
-			StandardScript ignored = new StandardScript(fileName, code, handler, errorLogger);
+			StandardScript script = new StandardScript(fileName, code, handler, errorLogger);
 			long end = System.nanoTime();
 			double elapsed = (end-start) * 1.0E-6;
 			if (errorLogger.isEmpty()) {
@@ -220,6 +228,10 @@ public class Controller implements Initializable {
 			} else {
 				generateErrorLog();
 			}
+
+			lexiconTableView.setContent(buildLexicons(script));
+
+
 		} catch (Exception e) {
 			StringBuilder sb = new StringBuilder(e.toString());
 			for (StackTraceElement element : e.getStackTrace()) {
@@ -229,6 +241,31 @@ public class Controller implements Initializable {
 			codeEditor.error(getFileName(), -1,
 					"Unhandled error while compiling script! " + sb.toString());
 		}
+	}
+
+	@NotNull
+	private Map<String, Map<String, List<String>>> buildLexicons(StandardScript script) {
+		Map<String, Map<String, List<String>>> lexiconGroups = new LinkedHashMap<>();
+		for (Runnable runnable :  script.getCommands()) {
+			if (runnable instanceof LexiconIOCommand) {
+				LexiconIOCommand ioCommand = (LexiconIOCommand) runnable;
+				String path = ioCommand.getFilePath();
+				String handle = ioCommand.getFileHandle();
+
+				FileHandler fileHandler = ioCommand.getFileHandler();
+				String fullPath = getParentFile().toString() + "/" + path;
+
+				List<String> lines = fileHandler.readLines(fullPath);
+				if (lexiconGroups.containsKey(handle)) {
+					lexiconGroups.get(handle).put(path, lines);
+				} else {
+					Map<String, List<String>> map = new LinkedHashMap<>();
+					map.put(path, lines);
+					lexiconGroups.put(handle, map);
+				}
+			}
+		}
+		return lexiconGroups;
 	}
 
 	private void generateErrorLog() {
@@ -251,12 +288,12 @@ public class Controller implements Initializable {
 		FileChooser chooser = new FileChooser();
 		chooser.setTitle(title);
 		chooser.getExtensionFilters().addAll(SCRIPT_EXTENSION_FILTER);
-		if (scriptFile != null) {
-			chooser.setInitialDirectory(scriptFile.getParentFile());
-		} else {
-			chooser.setInitialDirectory(new File("./"));
-		}
+		chooser.setInitialDirectory(getParentFile());
 		return chooser;
+	}
+
+	private File getParentFile() {
+		return scriptFile != null ? scriptFile.getParentFile() : new File("./");
 	}
 		
 	private String getFileName() {

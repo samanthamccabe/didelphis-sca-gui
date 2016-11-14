@@ -27,6 +27,8 @@
 <?import javafx.scene.layout.StackPane?>
 <?import org.didelphis.toolbox.components.CodeEditor?>
 
+<?import javafx.scene.control.TableView?>
+<?import org.didelphis.toolbox.components.LexiconViewer?>
 <StackPane xmlns="http://javafx.com/javafx/8.0.112-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.didelphis.toolbox.frontend.Controller">
   <children>
       <BorderPane>
@@ -53,6 +55,9 @@
          <center>
         <CodeEditor fx:id="codeEditor" BorderPane.alignment="CENTER" />
          </center>
+         <right>
+           <LexiconViewer fx:id="lexiconTableView" />
+         </right>
          <bottom>
         <ToolBar BorderPane.alignment="CENTER">
           <items>
