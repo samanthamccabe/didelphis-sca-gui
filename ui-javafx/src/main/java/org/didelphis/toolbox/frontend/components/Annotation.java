@@ -1,6 +1,4 @@
-package org.didelphis.toolbox.components;
-
-import org.jetbrains.annotations.Contract;
+package org.didelphis.toolbox.frontend.components;
 
 /**
  * Created by samantha on 11/11/16.

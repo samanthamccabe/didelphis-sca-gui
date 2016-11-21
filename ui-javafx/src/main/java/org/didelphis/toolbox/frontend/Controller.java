@@ -14,6 +14,7 @@
 
 package org.didelphis.toolbox.frontend;
 
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -22,19 +23,20 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
-import javafx.scene.control.TableView;
 import javafx.stage.FileChooser;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.didelphis.io.DiskFileHandler;
 import org.didelphis.io.FileHandler;
-import org.didelphis.phonetic.Lexicon;
 import org.didelphis.soundchange.ErrorLogger;
 import org.didelphis.soundchange.StandardScript;
 import org.didelphis.soundchange.command.LexiconIOCommand;
-import org.didelphis.toolbox.components.Annotation;
-import org.didelphis.toolbox.components.CodeEditor;
-import org.didelphis.toolbox.components.LexiconViewer;
+import org.didelphis.toolbox.frontend.components.Annotation;
+import org.didelphis.toolbox.frontend.components.CodeEditor;
+import org.didelphis.toolbox.frontend.components.LexiconViewer;
+import org.didelphis.toolbox.frontend.components.LogViewer;
+import org.didelphis.toolbox.frontend.components.PanelController;
+import org.didelphis.toolbox.frontend.data.LexiconData;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -56,49 +58,53 @@ public class Controller implements Initializable {
 	private static final DecimalFormat FORMAT = new DecimalFormat("#0.00");
 	private static final FileChooser.ExtensionFilter SCRIPT_EXTENSION_FILTER =
 			new FileChooser.ExtensionFilter("Script Files", "*.rule", "*.*");
+	
+		private static final String MAIN = "main";
 
-	private static List<String> THEMES = new ArrayList<>();
-
+	private final static Map<String, String> THEMES = new LinkedHashMap<>();
+	private final static List<String> THEME_LIST;
 	static {
-		THEMES.add("Ambiance");
-		THEMES.add("Chaos");
-		THEMES.add("Chrome");
-		THEMES.add("Clouds");
-		THEMES.add("Clouds Midnight");
-		THEMES.add("Cobalt");
-		THEMES.add("Crimson Editor");
-		THEMES.add("Dawn");
-		THEMES.add("Dreamweaver");
-		THEMES.add("Eclipse");
-		THEMES.add("GitHub");
-		THEMES.add("Idle Fingers");
-		THEMES.add("IPlastic");
-		THEMES.add("Katzenmilch");
-		THEMES.add("KR Theme");
-		THEMES.add("Kuroir");
-		THEMES.add("Merbivore");
-		THEMES.add("Merbivore Soft");
-		THEMES.add("Mono Industrial");
-		THEMES.add("Monokai");
-		THEMES.add("Pastel On Dark");
-		THEMES.add("Solarized Dark");
-		THEMES.add("Solarized Light");
-		THEMES.add("SQLServer");
-		THEMES.add("Terminal");
-		THEMES.add("Textmate");
-		THEMES.add("Tomorrow");
-		THEMES.add("Tomorrow Night");
-		THEMES.add("Tomorrow Night Blue");
-		THEMES.add("Tomorrow Night Bright");
-		THEMES.add("Tomorrow Night Eighties");
-		THEMES.add("Twilight");
-		THEMES.add("Vibrant Ink");
-		THEMES.add("XCode");
+		THEMES.put("Chrome",                  "light");
+		THEMES.put("Clouds",                  "light");
+		THEMES.put("Crimson Editor",          "light");
+		THEMES.put("Dawn",                    "light");
+		THEMES.put("Dreamweaver",             "light");
+		THEMES.put("Eclipse",                 "light");
+		THEMES.put("GitHub",                  "light");
+		THEMES.put("IPlastic",                "light");
+		THEMES.put("Katzenmilch",             "light");
+		THEMES.put("Kuroir",                  "light");
+		THEMES.put("Solarized Light",         "light");
+		THEMES.put("SQLServer",               "light");
+		THEMES.put("Textmate",                "light");
+		THEMES.put("Tomorrow",                "light");
+		THEMES.put("XCode",                   "light");
+		THEMES.put("Ambiance",                "dark");
+		THEMES.put("Chaos",                   "dark");
+		THEMES.put("Clouds Midnight",         "dark");
+		THEMES.put("Cobalt",                  "dark");// blue
+		THEMES.put("Idle Fingers",            "dark");
+		THEMES.put("KR Theme",                "dark");
+		THEMES.put("Merbivore",               "dark");
+		THEMES.put("Merbivore Soft",          "dark");
+		THEMES.put("Mono Industrial",         "dark");
+		THEMES.put("Monokai",                 "dark");
+		THEMES.put("Pastel On Dark",          "dark");
+		THEMES.put("Solarized Dark",          "dark");// blue
+		THEMES.put("Terminal",                "dark");
+		THEMES.put("Tomorrow Night",          "dark");
+		THEMES.put("Tomorrow Night Blue",     "dark");// blue
+		THEMES.put("Tomorrow Night Bright",   "dark");
+		THEMES.put("Tomorrow Night Eighties", "dark");
+		THEMES.put("Twilight",                "dark");
+		THEMES.put("Vibrant Ink",             "dark");
+		
+		THEME_LIST = new ArrayList<>(THEMES.keySet());
 	}
-	@FXML private LexiconViewer lexiconTableView;
+
 	@FXML private ChoiceBox<String> themePicker;
 	@FXML private Spinner<Integer> fontSizeSpinner;
-	@FXML private CodeEditor codeEditor;
+	@FXML private PanelController panelController;
 	@FXML private CheckBox hiddenCharBox;
 
 	private final ErrorLogger errorLogger;
@@ -112,21 +118,31 @@ public class Controller implements Initializable {
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		themePicker.setValue("Chaos");
-		themePicker.setItems(FXCollections.observableArrayList(THEMES));
+		themePicker.setItems(FXCollections.observableArrayList(THEMES.keySet()));
 		themePicker.getSelectionModel().selectedIndexProperty().addListener(
 				(observable, oldValue, newValue) -> {
-					String name = THEMES.get((int) newValue);
-					String replace = name.toLowerCase().replaceAll("\\s", "_");
-					codeEditor.setTheme(replace);
-				}
-		);
-
-
+					String name = THEME_LIST.get((int) newValue);
+					String theme = name.toLowerCase().replaceAll("\\s", "_");
+					for (CodeEditor editor : panelController.getCodeEditors().values()) {
+						editor.setTheme(theme);
+					}
+					panelController.getLogViewer().setTheme(theme);
+					panelController.setCSS(THEMES.get(name)); // light, dark, etc
+				});
 		fontSizeSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(4,24,14));
 		fontSizeSpinner.setEditable(true);
-		fontSizeSpinner.valueProperty().addListener((observable, oldValue, newValue) -> codeEditor.setFontSize(newValue));
-
-		hiddenCharBox.selectedProperty().addListener((observable, oldValue, newValue) -> codeEditor.setShowHiddenCharacters(newValue));
+		fontSizeSpinner.valueProperty().addListener(
+				(observable, oldValue, newValue) ->  {
+					for (CodeEditor editor : panelController.getCodeEditors().values()) {
+						editor.setFontSize(newValue);
+					}
+				});
+		hiddenCharBox.selectedProperty().addListener(
+				(observable, oldValue, newValue) -> {
+					for (CodeEditor editor : panelController.getCodeEditors().values()) {
+						editor.setShowHiddenCharacters(newValue);
+					}
+				});
 	}
 
 	public void openFile(ActionEvent actionEvent) {
@@ -136,57 +152,68 @@ public class Controller implements Initializable {
 			try {
 				scriptFile = file;
 				String data = FileUtils.readFileToString(scriptFile);
-				codeEditor.setCode(data);
+				panelController.getCodeEditors().get(MAIN).setCode(data);
 				compileScript();
 			} catch (IOException e) {
-				codeEditor.error(file.toString(), -1, e.toString());
+//				panelController.error(file.toString(), -1, e.toString());
 			}
 		}
 	}
 	
 	public void saveAsFile(ActionEvent actionEvent) {
+		LogViewer logViewer = panelController.getLogViewer();
 		FileChooser chooser = chooser("Save Script");
 		File file = chooser.showSaveDialog(null);
 		if (file != null) {
 			try {
-				String data = codeEditor.getCodeAndSnapshot();
+				CodeEditor editor = panelController.getCodeEditors().get(MAIN);
+				String data = editor.getCodeAndSnapshot();
 				FileUtils.write(file, data);
 			} catch (IOException e) {
-				codeEditor.error(file.toString(), -1, e.toString());
+				logViewer.error(file.toString(), -1, e.toString());
 			}
 		}
 	}
 
 	public void newFile(ActionEvent actionEvent) {
+		LogViewer logViewer = panelController.getLogViewer();
 		FileChooser chooser = chooser("New Script");
 		File file = chooser.showSaveDialog(null);
 		if (file != null) {
 			try {
-				String data = codeEditor.getCodeAndSnapshot();
+				CodeEditor editor = panelController.getCodeEditors().get(MAIN);
+				String data = editor.getCodeAndSnapshot();
 				FileUtils.write(file, data);
 			} catch (IOException e) {
-				codeEditor.error(file.toString(), -1, e.toString());
+				logViewer.error(file.toString(), -1, e.toString());
 			}
 		}
 	}
 
 	public void saveFile(ActionEvent actionEvent) {
+		LogViewer logViewer = panelController.getLogViewer();
 		if (scriptFile != null) {
 			try {
-				String data = codeEditor.getCodeAndSnapshot();
+				CodeEditor editor = panelController.getCodeEditors().get(MAIN);
+				String data = editor.getCodeAndSnapshot();
 				FileUtils.write(scriptFile, data);
 			} catch (IOException e) {
-				codeEditor.error(getFileName(), -1, e.toString());
+				logViewer.error(getFileName(), -1, e.toString());
 			}
+		} else {
+			saveAsFile(actionEvent);
 		}
 	}
 	
 	public void runScript() {
-		String code = codeEditor.getCodeAndSnapshot();
+		CodeEditor editor = panelController.getCodeEditors().get(MAIN);
+		String code = editor.getCodeAndSnapshot();
 		FileHandler handler = new DiskFileHandler("UTF-8");
+		LogViewer logViewer = panelController.getLogViewer();
+		
 		errorLogger.clear();
-		codeEditor.clearLog();
-		codeEditor.clearErrorMarkers();
+		logViewer.clearLog();
+		panelController.clearErrorMarkers();
 		try {
 			long start = System.nanoTime();
 			String fileName = getFileName();
@@ -195,9 +222,20 @@ public class Controller implements Initializable {
 			long end = System.nanoTime();
 			double elapsed = (end-start) * 1.0E-6;
 			if (errorLogger.isEmpty()) {
-				codeEditor.info(fileName, "ran successfully in ", FORMAT.format(elapsed), " ms");
+				logViewer.info(fileName, "ran successfully in ",
+						FORMAT.format(elapsed), " ms");
 			} else {
 				generateErrorLog();
+			}
+			LexiconData lexiconData = buildLexicons(script);
+			for (String key : lexiconData.keySet()) {
+				List<String> subKeys = lexiconData.getSubKeys(key);
+				List<List<String>> table = lexiconData.getAsTable(key);
+
+				String newKey = editor.getId() + "-" + key; 
+				LexiconViewer viewer = panelController.addLexiconView(newKey);
+				viewer.generate();
+				viewer.addContent(subKeys, table);
 			}
 		} catch (Exception e) {
 			StringBuilder sb = new StringBuilder(e.toString());
@@ -205,17 +243,20 @@ public class Controller implements Initializable {
 				sb.append("\n");
 				sb.append(element);
 			}
-			codeEditor.error(getFileName(), -1,
+			logViewer.error(getFileName(), -1,
 					"Unhandled error while running script! " + sb.toString());
 		}
 	}
 	
 	public void compileScript() {
-		String code = codeEditor.getCodeAndSnapshot();
+		CodeEditor editor = panelController.getCodeEditors().get(MAIN);
+		String code = editor.getCodeAndSnapshot();
 		FileHandler handler = new DiskFileHandler("UTF-8");
+		LogViewer logViewer = panelController.getLogViewer();
+		
 		errorLogger.clear();
-		codeEditor.clearLog();
-		codeEditor.clearErrorMarkers();
+		logViewer.clearLog();
+		panelController.clearErrorMarkers();
 		try {
 			long start = System.nanoTime();
 			String fileName = getFileName();
@@ -223,44 +264,38 @@ public class Controller implements Initializable {
 			long end = System.nanoTime();
 			double elapsed = (end-start) * 1.0E-6;
 			if (errorLogger.isEmpty()) {
-				codeEditor.info(fileName, "compiled successfully in ",
+				logViewer.info(fileName, "compiled successfully in ",
 						FORMAT.format(elapsed), " ms");
 			} else {
 				generateErrorLog();
 			}
-
-			lexiconTableView.setContent(buildLexicons(script));
-
-
+			
 		} catch (Exception e) {
 			StringBuilder sb = new StringBuilder(e.toString());
 			for (StackTraceElement element : e.getStackTrace()) {
 				sb.append("\n");
 				sb.append(element);
 			}
-			codeEditor.error(getFileName(), -1,
+			logViewer.error(getFileName(), -1,
 					"Unhandled error while compiling script! " + sb.toString());
 		}
 	}
 
 	@NotNull
-	private Map<String, Map<String, List<String>>> buildLexicons(StandardScript script) {
-		Map<String, Map<String, List<String>>> lexiconGroups = new LinkedHashMap<>();
+	private LexiconData buildLexicons(StandardScript script) {
+		LexiconData lexiconGroups = new LexiconData();
 		for (Runnable runnable :  script.getCommands()) {
 			if (runnable instanceof LexiconIOCommand) {
 				LexiconIOCommand ioCommand = (LexiconIOCommand) runnable;
-				String path = ioCommand.getFilePath();
+				String path = ioCommand.getFilePath().replaceAll(".*[/\\\\]","");
 				String handle = ioCommand.getFileHandle();
-
 				FileHandler fileHandler = ioCommand.getFileHandler();
-				String fullPath = getParentFile().toString() + "/" + path;
-
-				List<String> lines = fileHandler.readLines(fullPath);
+				List<String> list = fileHandler.readLines(path);
 				if (lexiconGroups.containsKey(handle)) {
-					lexiconGroups.get(handle).put(path, lines);
+					lexiconGroups.get(handle).put(path, list);
 				} else {
-					Map<String, List<String>> map = new LinkedHashMap<>();
-					map.put(path, lines);
+					LinkedHashMap<String, List<String>> map = new LinkedHashMap<>();
+					map.put(path, list);
 					lexiconGroups.put(handle, map);
 				}
 			}
@@ -269,10 +304,12 @@ public class Controller implements Initializable {
 	}
 
 	private void generateErrorLog() {
-		codeEditor.clearLog();
+		LogViewer logViewer = panelController.getLogViewer();
+		logViewer.clearLog();
+		
 		List<Annotation> annotations = new ArrayList<>();
 		for (ErrorLogger.Error err : errorLogger) {
-			codeEditor.error(err.getScript(), err.getLine(), err.getData());
+			logViewer.error(err.getScript(), err.getLine(), err.getData());
 			String message = err.getMessage();
 			String html4 = StringEscapeUtils.escapeHtml4(message);
 			int start = err.getLine() - 1;
@@ -281,7 +318,8 @@ public class Controller implements Initializable {
 					start, end, "<pre>"+ html4 +"</pre>")
 			);
 		}
-		codeEditor.addAnnotations(annotations);
+		// TODO:
+//		panelController.addAnnotations(annotations);
 	}
 	
 	private FileChooser chooser(String title) {
