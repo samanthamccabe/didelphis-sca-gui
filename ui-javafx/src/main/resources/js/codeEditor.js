@@ -159,9 +159,12 @@ var LexiconViewer = function (id) {
 
 	self.setValue = function (data) {
 		var table = $(lexiconViewTemplate(data));
-		$("#"+self.id).empty().append(table).children("table").DataTable();
+		$("#"+self.id).empty().append(table).find("table").DataTable({
+			"dom": "<'top'lf><'tablecontainer't><'bottom'p>",
+			// "scrollY": "300px",
+			"scrollCollapse": true
+		});
 	};
-
 
 	self.setNode = function (node) {
 		self.node = node;

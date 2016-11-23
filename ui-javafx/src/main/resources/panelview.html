@@ -17,7 +17,7 @@
   <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" type="text/css" href="css/didelphis.css"/>
-    <link rel="stylesheet" type="text/css" href="css/datatables.min.css"/>
+    <link rel="stylesheet" type="text/css" href="css/datatables.base.css"/>
     <link rel="stylesheet" type="text/css" href="css/golden/goldenlayout-base.css"/>
     <link rel="stylesheet" type="text/css" href="css/golden/goldenlayout-theme-dark.css"/>
   </head>
@@ -32,24 +32,20 @@
     <script type="text/javascript" charset="utf-8" src="js/lib/handlebars-v4.0.5.js"></script>
     <!-- Templates ==============================================================-->
     <script id="lexiconViewTemplate" type="text/x-handlebars-template">
-      <table>
-        <thead>
-          <tr>
-            {{#each this.keys}}
-            <th>{{this}}</th>
-            {{/each}}
-          </tr>
-        </thead>
-        <tbody>
-        {{#each this.table}}
+    <table class="bordertable">
+      <thead>
         <tr>
-          {{#each this}}
-            <td>{{this}}</td>
-          {{/each}}
+          <th><emph>i<emph></th>{{#each this.keys}}<th>{{this}}</th>{{/each}}
         </tr>
-        {{/each}}
-        </tbody>
-      </table>
+      </thead>
+      <tbody>
+      {{#each this.table}}
+      <tr>
+        <td>{{@index}}</td>{{#each this}}<td contenteditable>{{this}}</td>{{/each}}
+      </tr>
+      {{/each}}
+      </tbody>
+    </table>
     </script>
         <!-- Didelphis ==============================================================-->
     <script type="text/javascript" charset="utf-8" src="js/codeEditor.js"></script>

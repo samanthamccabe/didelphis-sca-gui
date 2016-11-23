@@ -1,26 +1,35 @@
 body {
-    overflow: hidden;
-    padding: 0;
-    margin:  0;
-    font-family: "DejaVu Sans", "Droid Sans", Arial, Verdana, sans-serif;
+	overflow: hidden;
+	padding: 0;
+	margin:  0;
+	font-family: "DejaVu Sans", "Droid Sans", Arial, Verdana, sans-serif;
 }
 
 .errorMarker {
-    position: absolute;
-    background: rgba(255,64,64,0.33);
-    z-index: 20
+	position: absolute;
+	background: rgba(255,64,64,0.33);
+	z-index: 20
 }
 
 .tableContainer {
-    margin: 1.5rem;
+	margin: 1.5rem;
 }
 
 .codeEditor {
-    position: absolute!important;
-    margin:    0;
-    top:       0;
-    bottom:    0;
-    left:      0;
-    right:     0;
-    z-index:   0;
+	position: absolute!important;
+	margin:    0;
+	top:       0;
+	bottom:    0;
+	left:      0;
+	right:     0;
+	z-index:   0;
+}
+
+.top {
+}
+
+.bottom {
+}
+
+.bordertable {
 }
