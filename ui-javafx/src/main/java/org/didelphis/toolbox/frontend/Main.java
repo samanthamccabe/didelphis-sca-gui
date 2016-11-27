@@ -15,6 +15,8 @@
 package org.didelphis.toolbox.frontend;
 
 import javafx.application.Application;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -35,6 +37,7 @@ public class Main extends Application {
 		URL resource = getClass().getClassLoader().getResource("main.fxml");
 		if (resource != null) {
 			FXMLLoader loader = new FXMLLoader(resource);
+
 			Parent root = loader.load();
 			primaryStage.setTitle("Didelphis SCA Workbench");
 			primaryStage.setScene(new Scene(root));
