@@ -27,8 +27,7 @@ import java.util.Map;
  * Created: 10/29/2016
  */
 public class PanelController extends StackPane {
-		
-	private final WebView webview;
+
 	private final WebEngine engine;
 	
 	private final Map<String, CodeEditor>    codeEditors;
@@ -38,24 +37,25 @@ public class PanelController extends StackPane {
 
 	public PanelController() {
 		super();
-		webview = new WebView();
-		engine = webview.getEngine();
-		
-		engine.setOnAlert(event -> System.out.println(event.toString()));
-		engine.setOnError(event -> System.err.println(event.toString()));
-		
-		engine.load(getResourceURL("panelview.html"));
-		getChildren().add(webview);
-		
-		// Controllers for pane contents
 		codeEditors = new HashMap<>();
 		lexiconViewers = new HashMap<>();
-		logViewer = new LogViewer("logViewer",engine);
-		
+
+		WebView webview = new WebView();
+		engine = webview.getEngine();
+
+		engine.load(getResourceURL("panelview.html"));
+		getChildren().add(webview);
+
+		// Controllers for pane contents
+		logViewer = new LogViewer("logViewer", engine);
+
 		// Populate initial view
 		addCodeEditor("main");
+
+		engine.setOnAlert(event -> System.out.println(event.toString()));
+		engine.setOnError(event -> System.err.println(event.toString()));
 	}
-	
+
 	public CodeEditor addCodeEditor(String id) {
 		if (!codeEditors.containsKey(id)) {
 			CodeEditor value = new CodeEditor(id, engine);

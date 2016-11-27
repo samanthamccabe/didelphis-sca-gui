@@ -21,8 +21,8 @@ table.dataTable thead th,table.dataTable tfoot th {
 	font-weight:bold
 }
 table.dataTable thead th,table.dataTable thead td {
-	padding:10px 18px;
-	border-bottom:1px solid #111
+	padding: 5px 10px;
+	/*border-bottom:1px solid #111*/
 }
 table.dataTable thead th:active,table.dataTable thead td:active {
 	outline:none
@@ -337,6 +337,7 @@ table.dataTable,table.dataTable th,table.dataTable td {
 }
 .dataTables_wrapper.no-footer .dataTables_scrollBody {
 	border-bottom:1px solid #111
+	border-left:1px solid #111
 }
 .dataTables_wrapper.no-footer div.dataTables_scrollHead table,.dataTables_wrapper.no-footer div.dataTables_scrollBody table {
 	border-bottom:none

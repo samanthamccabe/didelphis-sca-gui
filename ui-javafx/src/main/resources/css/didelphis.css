@@ -3,16 +3,13 @@ body {
 	padding: 0;
 	margin:  0;
 	font-family: "DejaVu Sans", "Droid Sans", Arial, Verdana, sans-serif;
+	font-size: 12px;
 }
 
 .errorMarker {
 	position: absolute;
 	background: rgba(255,64,64,0.33);
 	z-index: 20
-}
-
-.tableContainer {
-	margin: 1.5rem;
 }
 
 .codeEditor {
@@ -25,11 +22,12 @@ body {
 	z-index:   0;
 }
 
-.top {
+.lexiconContainer {
+	padding-top: 10px;
 }
 
-.bottom {
-}
-
-.bordertable {
-}
+td {
+	/* TODO */
+	border-top: solid 1px black;
+	border-right: solid 1px black;
+}	

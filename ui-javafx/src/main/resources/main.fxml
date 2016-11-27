@@ -54,7 +54,6 @@
         <PanelController fx:id="panelController" BorderPane.alignment="CENTER" />
          </center>
          <right>
-           <!--<LexiconViewer fx:id="lexiconTableView" />-->
          </right>
          <bottom>
         <ToolBar BorderPane.alignment="CENTER">

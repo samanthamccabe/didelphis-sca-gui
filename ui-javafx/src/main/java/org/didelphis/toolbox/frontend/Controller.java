@@ -14,7 +14,6 @@
 
 package org.didelphis.toolbox.frontend;
 
-import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -48,6 +47,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.regex.Pattern;
 
 /**
  * Samantha Fiona Morrigan McCabe
@@ -63,6 +63,8 @@ public class Controller implements Initializable {
 
 	private final static Map<String, String> THEMES = new LinkedHashMap<>();
 	private final static List<String> THEME_LIST;
+	private static final Pattern NEWLINE = Pattern.compile("\\r|\\r?\\n");
+
 	static {
 		THEMES.put("Chrome",                  "light");
 		THEMES.put("Clouds",                  "light");
@@ -117,7 +119,7 @@ public class Controller implements Initializable {
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		themePicker.setValue("Chaos");
+		themePicker.setValue("Chrome");
 		themePicker.setItems(FXCollections.observableArrayList(THEMES.keySet()));
 		themePicker.getSelectionModel().selectedIndexProperty().addListener(
 				(observable, oldValue, newValue) -> {
@@ -155,13 +157,13 @@ public class Controller implements Initializable {
 				panelController.getCodeEditors().get(MAIN).setCode(data);
 				compileScript();
 			} catch (IOException e) {
-//				panelController.error(file.toString(), -1, e.toString());
+				LogViewer logViewer = panelController.getLogViewer();
+				logViewer.error(file.toString(), -1, e.toString());
 			}
 		}
 	}
 	
 	public void saveAsFile(ActionEvent actionEvent) {
-		LogViewer logViewer = panelController.getLogViewer();
 		FileChooser chooser = chooser("Save Script");
 		File file = chooser.showSaveDialog(null);
 		if (file != null) {
@@ -170,13 +172,13 @@ public class Controller implements Initializable {
 				String data = editor.getCodeAndSnapshot();
 				FileUtils.write(file, data);
 			} catch (IOException e) {
+				LogViewer logViewer = panelController.getLogViewer();
 				logViewer.error(file.toString(), -1, e.toString());
 			}
 		}
 	}
 
 	public void newFile(ActionEvent actionEvent) {
-		LogViewer logViewer = panelController.getLogViewer();
 		FileChooser chooser = chooser("New Script");
 		File file = chooser.showSaveDialog(null);
 		if (file != null) {
@@ -185,19 +187,20 @@ public class Controller implements Initializable {
 				String data = editor.getCodeAndSnapshot();
 				FileUtils.write(file, data);
 			} catch (IOException e) {
+				LogViewer logViewer = panelController.getLogViewer();
 				logViewer.error(file.toString(), -1, e.toString());
 			}
 		}
 	}
 
 	public void saveFile(ActionEvent actionEvent) {
-		LogViewer logViewer = panelController.getLogViewer();
 		if (scriptFile != null) {
 			try {
 				CodeEditor editor = panelController.getCodeEditors().get(MAIN);
 				String data = editor.getCodeAndSnapshot();
 				FileUtils.write(scriptFile, data);
 			} catch (IOException e) {
+				LogViewer logViewer = panelController.getLogViewer();
 				logViewer.error(getFileName(), -1, e.toString());
 			}
 		} else {
@@ -215,8 +218,10 @@ public class Controller implements Initializable {
 		logViewer.clearLog();
 		panelController.clearErrorMarkers();
 		try {
-			long start = System.nanoTime();
 			String fileName = getFileName();
+			logViewer.info(fileName, "processing");
+
+			long start = System.nanoTime();
 			StandardScript script = new StandardScript(fileName, code, handler, errorLogger);
 			script.process();
 			long end = System.nanoTime();
@@ -235,7 +240,7 @@ public class Controller implements Initializable {
 				String newKey = editor.getId() + "-" + key; 
 				LexiconViewer viewer = panelController.addLexiconView(newKey);
 				viewer.generate();
-				viewer.addContent(subKeys, table);
+				viewer.setContent(subKeys, table);
 			}
 		} catch (Exception e) {
 			StringBuilder sb = new StringBuilder(e.toString());
@@ -258,8 +263,10 @@ public class Controller implements Initializable {
 		logViewer.clearLog();
 		panelController.clearErrorMarkers();
 		try {
-			long start = System.nanoTime();
 			String fileName = getFileName();
+			logViewer.info(fileName, "processing");
+
+			long start = System.nanoTime();
 			StandardScript script = new StandardScript(fileName, code, handler, errorLogger);
 			long end = System.nanoTime();
 			double elapsed = (end-start) * 1.0E-6;
@@ -287,10 +294,11 @@ public class Controller implements Initializable {
 		for (Runnable runnable :  script.getCommands()) {
 			if (runnable instanceof LexiconIOCommand) {
 				LexiconIOCommand ioCommand = (LexiconIOCommand) runnable;
-				String path = ioCommand.getFilePath().replaceAll(".*[/\\\\]","");
+				String filePath = ioCommand.getFilePath();
+				String path = filePath.replaceAll(".*[/\\\\]","");
 				String handle = ioCommand.getFileHandle();
 				FileHandler fileHandler = ioCommand.getFileHandler();
-				List<String> list = fileHandler.readLines(path);
+				List<String> list = fileHandler.readLines(filePath);
 				if (lexiconGroups.containsKey(handle)) {
 					lexiconGroups.get(handle).put(path, list);
 				} else {
@@ -313,7 +321,7 @@ public class Controller implements Initializable {
 			String message = err.getMessage();
 			String html4 = StringEscapeUtils.escapeHtml4(message);
 			int start = err.getLine() - 1;
-			int end = start + err.getData().split("\\r|\\r?\\n").length - 1;
+			int end = start + NEWLINE.split(err.getData()).length - 1;
 			annotations.add(Annotation.errorHTML(
 					start, end, "<pre>"+ html4 +"</pre>")
 			);

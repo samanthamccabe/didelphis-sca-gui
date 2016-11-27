@@ -16,18 +16,17 @@ package org.didelphis.toolbox.frontend.components;
 
 import javafx.scene.web.WebEngine;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by samantha on 11/13/16.
  */
 public class LexiconViewer extends Component {
-	
+
 	public LexiconViewer(String id, WebEngine engine) {
 		super(id, engine);
-		
 	}
 
 	@Override
@@ -35,14 +34,26 @@ public class LexiconViewer extends Component {
 		execute("addViewer", getId());
 	}
 
-	public void addContent(List<String> subKeys, List<List<String>> table) {
-		Map<String, Object> temp = new HashMap<>();
-		temp.put("keys", subKeys);
-		temp.put("table", table);
-		execute("lexiconViewers[\""+getId()+"\"].setValue", temp);
+	public void setContent(List<String> subKeys, List<List<String>> table) {
+		execute("lexiconViewers[\"" + getId() + "\"].createTable", subKeys);
+		int i = 1;
+		List<Object> blob = new ArrayList<>();
+		for (List<String> list : table) {
+			if (i % 50 == 0) {
+				execute("lexiconViewers[\"" + getId() + "\"].addData", blob);
+				blob.clear();
+			}
+			list.add(0, String.valueOf(i));
+			blob.add(list);
+			i++;
+		}
+		if (!blob.isEmpty()) {
+			execute("lexiconViewers[\"" + getId() + "\"].addData", blob);
+		}
+		execute("lexiconViewers[\"" + getId() + "\"].initialize()");
 	}
 
 	public void clear() {
-		execute("lexiconViewers[\""+getId()+"\"].clear()");
+		execute("lexiconViewers[\"" + getId() + "\"].clear()");
 	}
 }

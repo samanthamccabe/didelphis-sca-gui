@@ -16,10 +16,13 @@
   <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" type="text/css" href="css/didelphis.css"/>
     <link rel="stylesheet" type="text/css" href="css/datatables.base.css"/>
+    <!-- ======================================================================= -->
+    <link rel="stylesheet" type="text/css" href="css/didelphis.css"/>
+    <!-- <link rel="stylesheet" type="text/css" href="css/didelphis-theme-light.css"/> -->
+    <!-- ======================================================================= -->
     <link rel="stylesheet" type="text/css" href="css/golden/goldenlayout-base.css"/>
-    <link rel="stylesheet" type="text/css" href="css/golden/goldenlayout-theme-dark.css"/>
+    <link rel="stylesheet" type="text/css" href="css/golden/goldenlayout-theme-light.css"/>
   </head>
   <body>
 
@@ -31,23 +34,28 @@
     <script type="text/javascript" charset="utf-8" src="js/lib/datatables.min.js"></script>
     <script type="text/javascript" charset="utf-8" src="js/lib/handlebars-v4.0.5.js"></script>
     <!-- Templates ==============================================================-->
-    <script id="lexiconViewTemplate" type="text/x-handlebars-template">
+    <script id="lexiconTableTemplate" type="text/x-handlebars-template">
     <table class="bordertable">
       <thead>
         <tr>
-          <th><emph>i<emph></th>{{#each this.keys}}<th>{{this}}</th>{{/each}}
+          <th class="indexCell">i</th>{{#each this}}<th>{{this}}</th>{{/each}}
         </tr>
       </thead>
-      <tbody>
-      {{#each this.table}}
-      <tr>
-        <td>{{@index}}</td>{{#each this}}<td contenteditable>{{this}}</td>{{/each}}
-      </tr>
-      {{/each}}
+      <tbody contenteditable>
       </tbody>
     </table>
     </script>
-        <!-- Didelphis ==============================================================-->
+
+    <script id="lexiconRowTemplate" type="text/x-handlebars-template">
+      {{#each this}}
+      <tr>
+        {{#each this}}
+          <td>{{this}}</td>
+        {{/each}}
+      </tr>
+      {{/each}}
+    </script>
+    <!-- Didelphis ==============================================================-->
     <script type="text/javascript" charset="utf-8" src="js/codeEditor.js"></script>
     <script type="text/javascript" charset="utf-8" src="js/panelController.js" ></script>
 
