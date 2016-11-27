@@ -3,25 +3,24 @@
 "use strict";
 var fontFamilies = ["DejaVu Sans Mono", "Consolas", "Source Code Pro", "monospace"];
 
-var lexiconViewTemplate = Handlebars.compile($("#lexiconViewTemplate").html());
+var lexiconTableTemplate = Handlebars.compile($("#lexiconTableTemplate").html());
+var lexiconRowTemplate   = Handlebars.compile($("#lexiconRowTemplate").html());
 
-var range = function(start, end) {
+function range(start, end) {
 	var Range = ace.require("ace/range").Range;
 	return new Range(start, 0, end, 80);
-};
+}
 
 var errorMarkerClass = "errorMarker";
 var warningMarkerClass = "warningMarker";
 
-//TODO: needs to be initialized with a theme???
-var CodeEditor = function (id) {
+function CodeEditor(id) {
 	var self = this;
 	self.id = id;
-	var editor = ace.edit(id);
-	editor = ace.edit(id);
-	editor.session.setMode("ace/mode/didelphissca");
-	editor.renderer.setOption("fontFamily", fontFamilies);
-	editor.on("change", function(delta) {
+	self.editor = ace.edit(id);
+	self.editor.session.setMode("ace/mode/didelphissca");
+	self.editor.renderer.setOption("fontFamily", fontFamilies);
+	self.editor.on("change", function(delta) {
 		var annotations = self.getAnnotations();
 		var deltaRange = range(delta.start.row, delta.end.row);
 		for (var i = 0; i < annotations.length;) {
@@ -37,19 +36,19 @@ var CodeEditor = function (id) {
 	});
 
 	self.setValue = function (data) {
-		editor.setValue(data);
+		self.editor.setValue(data);
 	};
 
 	self.getValue = function () {
-		return editor.getValue();
+		return self.editor.getValue();
 	};
 
 	self.setShowInvisibles = function (b) {
-		editor.setShowInvisibles(b);
+		self.editor.setShowInvisibles(b);
 	};
 
 	self.resize = function () {
-		editor.resize();
+		self.editor.resize();
 	};
 
 	self.setNode = function (node) {
@@ -61,19 +60,19 @@ var CodeEditor = function (id) {
 	};
 
 	self.setTheme = function (theme) {
-		editor.setTheme(theme);
+		self.editor.setTheme(theme);
 	};
 
 	self.setFontSize = function (size) {
-		editor.setFontSize(size);
+		self.editor.setFontSize(size);
 	};
 
 	self.getAnnotations = function () {
-		return editor.session.getAnnotations();
+		return self.editor.session.getAnnotations();
 	};
 
 	self.addMarker = function (start, end, markerClass) {
-		editor.session.addMarker(range(start, end), markerClass, "fullLine", false);
+		self.editor.session.addMarker(range(start, end), markerClass, "fullLine", false);
 	};
 
 	self.setAnnotations = function (annotations) {
@@ -81,7 +80,7 @@ var CodeEditor = function (id) {
 		for (var i = 0; i < annotations.length; i++) {
 			self.setMarker(annotations[i]);
 		}
-		editor.session.setAnnotations(annotations);
+		self.editor.session.setAnnotations(annotations);
 	};
 
 	self.setMarker = function (annotation) {
@@ -98,7 +97,7 @@ var CodeEditor = function (id) {
 	};
 
 	self.clearMarkers = function () {
-		var session = editor.session;
+		var session = self.editor.session;
 		var markers = session.getMarkers(false);
 		for (var key in markers) {
 			if (markers.hasOwnProperty(key)) {
@@ -111,11 +110,11 @@ var CodeEditor = function (id) {
 	};
 
 	self.clearAnnotations = function () {
-		editor.session.clearAnnotations();
+		self.editor.session.clearAnnotations();
 	};
-};
+}
 
-var ErrorLogger = function (id) {
+function ErrorLogger(id) {
 	var self = this;
 	self.id = id;
 	var logger = ace.edit(id);
@@ -151,19 +150,47 @@ var ErrorLogger = function (id) {
 	self.resize = function () {
 		logger.resize();
 	};
-};
+}
 
-var LexiconViewer = function (id) {
+function LexiconViewer(id) {
 	var self = this;
 	self.id = id;
 
-	self.setValue = function (data) {
-		var table = $(lexiconViewTemplate(data));
-		$("#"+self.id).empty().append(table).find("table").DataTable({
-			"dom": "<'top'lf><'tablecontainer't><'bottom'p>",
-			// "scrollY": "300px",
+	self.createTable = function (data) {
+		var table = $(lexiconTableTemplate(data));
+		$("#" + self.id).empty().append(table);
+	};
+
+	self.initialize = function () {
+		$("#" + self.id).find("table").DataTable({
+			// "dom": "<'top'lf><'tablecontainer't><'bottom'p>",
+			"dom": "<'dtHead'lf>tp",
+			"scrollY": "300px",
+			"lengthMenu": [ 25, 50, 100, 200 ],
+			"pageLength": 50,
 			"scrollCollapse": true
 		});
+		$(document).ready( function () { self.resize(); });
+	};
+
+	self.addData = function (data) {
+		var body = $("#" + self.id).find("tbody");
+		var row  = $(lexiconRowTemplate(data));
+		body.append(row);
+	};
+
+	self.resize = function () {
+		var container = $("#" + self.id);
+		if (container.find("table").length) {
+			var currHeightTotal = container.children().first().height();
+			var parentHeight = container.parent().height();
+			var delta = parentHeight - currHeightTotal;
+			var scroller = container.find(".dataTables_scrollBody");
+			if (scroller) {
+				var maxHeight = parseInt(scroller.css("max-height").replace("px",""));
+				scroller.css("max-height", "" + (maxHeight + delta - 20) + "px");
+			}
+		}
 	};
 
 	self.setNode = function (node) {
@@ -173,4 +200,4 @@ var LexiconViewer = function (id) {
 	self.getNode = function () {
 		return self.node;
 	};
-};
+}
