@@ -81,7 +81,7 @@ public class Controller implements Initializable {
 		THEMES.put("Textmate",                "light");
 		THEMES.put("Tomorrow",                "light");
 		THEMES.put("XCode",                   "light");
-		THEMES.put("Ambiance",                "dark");
+//		THEMES.put("Ambiance",                "dark");
 		THEMES.put("Chaos",                   "dark");
 		THEMES.put("Clouds Midnight",         "dark");
 		THEMES.put("Cobalt",                  "dark");// blue

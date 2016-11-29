@@ -1,5 +1,5 @@
 /* jshint globalstrict: true*/
-/* globals $, GoldenLayout, CodeEditor, ErrorLogger, LexiconViewer, rgbDeparse, rulesForCssText, parseColor */
+/* globals $, GoldenLayout, CodeEditor, ErrorLogger, LexiconViewer, rgbDeparse, rulesForCssText, parseColor, minus, plus, times */
 "use strict";
 
 window.onerror = function (errorMsg, url, lineNumber, column, errorObj) {
@@ -25,43 +25,104 @@ function setCSS (theme) {
 	$("link[href*='goldenlayout-theme']").attr("href", "css/golden/goldenlayout-theme-" + theme + ".css");
 	$("link[href*='didelphis-theme']").attr("href", "css/didelphis-theme-" + theme + ".css");
 
-/*
 	// Dynamic theme generation --- deferred
 	var cssRules = rulesForCssText(codeEditors.main.editor.renderer.theme.cssText);
 	
-	var bg,      // Background
-	    tx,      // Foreground
-	    st,      // String
-	//  vr,      // Variable
-	    nm,      // Number
-	    fn = []; // Function
+	var activeLine;
+	var bg, // Background
+	    tx, // Foreground
+	    st, // String
+	    kw, // Keyword
+	    vr, // Variable
+	    nm, // Number
+	    fn; // Function
 
 	for (var key in cssRules) {
 		if (cssRules.hasOwnProperty(key)) {
 			var rule = cssRules[key];
 			var selectorText = rule.selectorText;
 
-			if (!rule.style) { continue; } // get out
+			if (!rule.style) {
+				continue;
+			} // get out
 
-			var background   = rule.style["background-color"];
-			var textColor    = rule.style.color;
-
-			if (selectorText && (textColor || background)) {
+			var background = rule.style["background-color"];
+			var textColor = rule.style.color;
+			if (selectorText && (background || textColor)) {
 				// Background color
-				if (/^\.ace-[a-z_\-]+\s*$/.test(selectorText)) {
+				if (/^\.ace-[a-z_\-]+$/.test(selectorText)) {
 					bg = parseColor(background);
 					tx = parseColor(textColor);
-				} else if (contains(selectorText, [".ace_function"])) {
+				} else if (!activeLine && contains(selectorText, [".ace_active-line"])) {
+					activeLine = parseColor(background);
+				} else if (!fn && contains(selectorText, [".ace_function"])) {
 					fn = parseColor(textColor);
-				} else if (contains(selectorText, [".ace_string"])) {
-					tx = parseColor(textColor);
-				} else if (contains(selectorText, [".ace_numeric"])) {
+				} else if (!st && contains(selectorText, [".ace_string"])) {
+					st = parseColor(textColor);
+				} else if (!nm && contains(selectorText, [".ace_numeric"])) {
 					nm = parseColor(textColor);
+				} else if (!vr && contains(selectorText, [".ace_variable", ".ace_language"])) {
+					vr = parseColor(textColor);
+				} else if (!kw && contains(selectorText, [".ace_keyword", ".ace_type"])) {
+					kw = parseColor(textColor);
 				}
 			}
 		}
 	}
-	*/
+
+	var dif = minus(bg,tx);
+	var p75 = minus(bg, times(dif, 0.75));
+	var p50 = minus(bg, times(dif, 0.50));
+	var p25 = minus(bg, times(dif, 0.25));
+	var p10 = minus(bg, times(dif, 0.10));
+	var p05 = minus(bg, times(dif, 0.05));
+
+	var style = generateStyle({
+		"body": {
+			"background-color": rgbDeparse(bg),
+			"color":            rgbDeparse(tx)
+		},
+		"table.dataTable tbody tr": {
+			"background-color": rgbDeparse(bg),
+			"color":            rgbDeparse(tx)
+		},
+		".dataTables_wrapper .dataTables_length,.dataTables_wrapper .dataTables_filter,.dataTables_wrapper .dataTables_info,.dataTables_wrapper .dataTables_processing,.dataTables_wrapper .dataTables_paginate": {
+			"color":            rgbDeparse(fn)
+		},
+		".dataTables_wrapper .dataTables_paginate .paginate_button": {
+			"color":            rgbDeparse(fn) + "!important"
+		},
+		"input, select": {
+			"background-color": rgbDeparse(bg),
+			"color":            rgbDeparse(vr),
+			"border-color":     rgbDeparse(p10)
+		},
+		"table.dataTable tbody tr.odd": {
+			"background-color": rgbDeparse(p05)
+		},
+		"td" : {
+			"border-color": rgbDeparse(p10),
+		}
+	});
+	$("style").first().text(style);
+}
+
+function generateStyle(styles) {
+	var string = "";
+	for (var selector in styles) {
+		if (styles.hasOwnProperty(selector)) {
+			string += selector + " {\n";
+
+			var style = styles[selector];
+			for (var property in style) {
+				if (style.hasOwnProperty(property)) {
+					string += "\t"+property + ": " + style[property] + ";\n";
+				}
+			}
+			string += "}\n";
+		}
+	}
+	return string;
 }
 
 function addViewer (id) {
@@ -196,9 +257,11 @@ layout.registerComponent( "Lexicon View", function( container, state ){
 	});
 });
 
-layout.init();
+
+
 
 window.onresize = resize;
 $(document).ready(function () {
+	layout.init();
 	resize();
 });
