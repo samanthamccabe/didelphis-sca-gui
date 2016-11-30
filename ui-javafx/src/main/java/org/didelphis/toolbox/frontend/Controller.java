@@ -125,11 +125,10 @@ public class Controller implements Initializable {
 				(observable, oldValue, newValue) -> {
 					String name = THEME_LIST.get((int) newValue);
 					String theme = name.toLowerCase().replaceAll("\\s", "_");
-					for (CodeEditor editor : panelController.getCodeEditors().values()) {
-						editor.setTheme(theme);
-					}
-					panelController.getLogViewer().setTheme(theme);
-					panelController.setCSS(THEMES.get(name)); // light, dark, etc
+//					for (CodeEditor editor : panelController.getCodeEditors().values()) {
+//						editor.setTheme(theme);
+//					}
+					panelController.setTheme(THEMES.get(name), theme);
 				});
 		fontSizeSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(4,24,14));
 		fontSizeSpinner.setEditable(true);

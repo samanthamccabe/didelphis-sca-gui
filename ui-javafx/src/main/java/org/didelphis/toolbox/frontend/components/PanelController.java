@@ -106,16 +106,12 @@ public class PanelController extends StackPane {
 		}
 	}
 
-	public void setCSS(String theme) {
-		engine.executeScript("setCSS(\"" + theme + "\")");
-	}
-
 	private static String getResourceURL(String path) {
 		URL resource = PanelController.class.getClassLoader().getResource(path);
-		if (resource != null) {
-			return resource.toExternalForm();
-		} else {
-			return null;
-		}
+		return resource != null ? resource.toExternalForm() : null;
+	}
+
+	public void setTheme(String type, String name) {
+		engine.executeScript("setTheme(\'"+type+"\',\'"+name+"\')");
 	}
 }

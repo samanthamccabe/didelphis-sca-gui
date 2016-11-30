@@ -60,7 +60,7 @@ function CodeEditor(id) {
 	};
 
 	self.setTheme = function (theme) {
-		self.editor.setTheme(theme);
+		self.editor.setTheme("ace/theme/"+theme);
 	};
 
 	self.setFontSize = function (size) {
@@ -131,12 +131,8 @@ function ErrorLogger(id) {
 		logger.resize();
 	};
 
-	self.setNode = function (node) {
-		self.node = node;
-	};
-
 	self.setTheme = function (theme) {
-		logger.setTheme(theme);
+		logger.setTheme("ace/theme/"+theme);
 	};
 
 	self.clear = function () {
@@ -157,12 +153,11 @@ function LexiconViewer(id) {
 	self.id = id;
 
 	self.createTable = function (data) {
-		var table = $(lexiconTableTemplate(data));
-		$("#" + self.id).empty().append(table);
+		$("#" + self.id).empty().append($(lexiconTableTemplate(data)));
 	};
 
 	self.initialize = function () {
-		$("#" + self.id).find("table").DataTable({
+		self.table = $("#" + self.id).find("table").DataTable({
 			// "dom": "<'top'lf><'tablecontainer't><'bottom'p>",
 			"dom": "<'dtHead'lf>tp",
 			"scrollY": "300px",
@@ -191,13 +186,5 @@ function LexiconViewer(id) {
 				scroller.css("max-height", "" + (maxHeight + delta - 20) + "px");
 			}
 		}
-	};
-
-	self.setNode = function (node) {
-		self.node = node;
-	};
-
-	self.getNode = function () {
-		return self.node;
 	};
 }
