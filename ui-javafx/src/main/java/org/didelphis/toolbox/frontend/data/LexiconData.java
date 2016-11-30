@@ -12,40 +12,48 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package org.didelphis.toolbox.frontend;
+package org.didelphis.toolbox.frontend.data;
 
-import javafx.application.Application;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.stage.Stage;
-
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 
 /**
  * Samantha Fiona Morrigan McCabe
- * Created: 8/17/2015
+ * Created: 11/18/2016
  */
-public class Main extends Application {
+public class LexiconData extends LinkedHashMap<String, LinkedHashMap<String, List<String>>> {
 	
-	@Override
-	public void start(Stage primaryStage) throws IOException {
-		URL resource = getClass().getClassLoader().getResource("main.fxml");
-		if (resource != null) {
-			FXMLLoader loader = new FXMLLoader(resource);
-
-			Parent root = loader.load();
-			primaryStage.setTitle("Didelphis SCA Workbench");
-			primaryStage.setScene(new Scene(root));
-			primaryStage.show();
-		}
+	public LexiconData() {
+		super();
 	}
 	
-	public static void main(String[] args) throws IOException, URISyntaxException {
-		launch(args);
+	public List<List<String>> getAsTable(String key) {
+		List<List<String>> list = new ArrayList<>();
+
+		LinkedHashMap<String, List<String>> map = get(key);
+
+		for (List<String> columns : map.values()) {
+			list.add(columns);
+		}
+
+		List<List<String>> transpose = new ArrayList<>();
+		int columns = list.size();
+		int rows = list.get(0).size();
+		for (int i = 0; i < rows; i++) {
+			List<String> row = new ArrayList<>();
+			for (int j = 0; j < columns; j++) {
+				row.add(list.get(j).get(i));
+			}
+			transpose.add(row);
+		}
+
+		return transpose;
+	}
+	
+	public List<String> getSubKeys(String key) {
+		List<String> list = new ArrayList<>();
+		list.addAll(get(key).keySet());
+		return list;
 	}
 }

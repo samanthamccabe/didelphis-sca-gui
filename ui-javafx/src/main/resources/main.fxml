@@ -25,7 +25,7 @@
 <?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.StackPane?>
-<?import org.didelphis.toolbox.components.CodeEditor?>
+<?import org.didelphis.toolbox.frontend.components.PanelController?>
 
 <StackPane xmlns="http://javafx.com/javafx/8.0.112-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.didelphis.toolbox.frontend.Controller">
   <children>
@@ -51,8 +51,10 @@
         </MenuBar>
          </top>
          <center>
-        <CodeEditor fx:id="codeEditor" BorderPane.alignment="CENTER" />
+        <PanelController fx:id="panelController" BorderPane.alignment="CENTER" />
          </center>
+         <right>
+         </right>
          <bottom>
         <ToolBar BorderPane.alignment="CENTER">
           <items>

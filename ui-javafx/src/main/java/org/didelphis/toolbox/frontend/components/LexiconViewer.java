@@ -12,40 +12,48 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package org.didelphis.toolbox.frontend;
+package org.didelphis.toolbox.frontend.components;
 
-import javafx.application.Application;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.stage.Stage;
+import javafx.scene.web.WebEngine;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 /**
- * Samantha Fiona Morrigan McCabe
- * Created: 8/17/2015
+ * Created by samantha on 11/13/16.
  */
-public class Main extends Application {
-	
-	@Override
-	public void start(Stage primaryStage) throws IOException {
-		URL resource = getClass().getClassLoader().getResource("main.fxml");
-		if (resource != null) {
-			FXMLLoader loader = new FXMLLoader(resource);
+public class LexiconViewer extends Component {
 
-			Parent root = loader.load();
-			primaryStage.setTitle("Didelphis SCA Workbench");
-			primaryStage.setScene(new Scene(root));
-			primaryStage.show();
-		}
+	public LexiconViewer(String id, WebEngine engine) {
+		super(id, engine);
 	}
-	
-	public static void main(String[] args) throws IOException, URISyntaxException {
-		launch(args);
+
+	@Override
+	public void generate() {
+		execute("addViewer", getId());
+	}
+
+	public void setContent(List<String> subKeys, List<List<String>> table) {
+		execute("lexiconViewers[\"" + getId() + "\"].createTable", subKeys);
+		int i = 1;
+		List<Object> blob = new ArrayList<>();
+		for (List<String> list : table) {
+			if (i % 50 == 0) {
+				execute("lexiconViewers[\"" + getId() + "\"].addData", blob);
+				blob.clear();
+			}
+			list.add(0, String.valueOf(i));
+			blob.add(list);
+			i++;
+		}
+		if (!blob.isEmpty()) {
+			execute("lexiconViewers[\"" + getId() + "\"].addData", blob);
+		}
+		execute("lexiconViewers[\"" + getId() + "\"].initialize()");
+	}
+
+	public void clear() {
+		execute("lexiconViewers[\"" + getId() + "\"].clear()");
 	}
 }

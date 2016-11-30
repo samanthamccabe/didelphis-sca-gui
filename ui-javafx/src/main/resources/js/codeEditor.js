@@ -1,82 +1,190 @@
-/* jshint globalstrict: true*/
-/* globals ace */
+/* jshint globalstrict: true, unused: false */
+/* globals $, ace, Handlebars */
 "use strict";
-
-var Range = ace.require("ace/range").Range;
-
 var fontFamilies = ["DejaVu Sans Mono", "Consolas", "Source Code Pro", "monospace"];
 
-var editor = ace.edit("editor");
-editor.setTheme("ace/theme/chaos");
-editor.setFontSize(14);
-editor.session.setMode("ace/mode/didelphissca");
-editor.renderer.setOption("fontFamily", fontFamilies);
-editor.on("change", function (delta) {
-  var annotations = editor.session.getAnnotations();
-  var deltaRange = range(delta.start.row, delta.end.row);
-  for (var i = 0; i < annotations.length; i++) {
-    var annotation = annotations[i];
-    var annotationRange = range(annotation.row,annotation.end);
-    if (deltaRange.intersects(annotationRange)) {
-      annotations.splice(i, 1);
-      i--; // step back
-    }
-  }
-  setAnnotations(annotations); 
-});
+var lexiconTableTemplate = Handlebars.compile($("#lexiconTableTemplate").html());
+var lexiconRowTemplate   = Handlebars.compile($("#lexiconRowTemplate").html());
 
-var log = ace.edit("logEditor");
-log.container.parentNode.style.display="none";
-log.setTheme("ace/theme/chaos");
-log.setFontSize(12);
-log.session.setMode("ace/mode/didelphislog");
-log.session.setUseWorker(false);
-log.session.setUseWrapMode(true);
-log.setReadOnly(true);
-log.setShowPrintMargin(false);
-log.renderer.setOption("fontFamily", fontFamilies);
-
-var errorMarkerClass   = "errorMarker";
-var warningMarkerClass = "warningMarker";
-
-var range = function(start, end) {
-  return new Range(start, 0, end, 80);
+function range(start, end) {
+	var Range = ace.require("ace/range").Range;
+	return new Range(start, 0, end, 80);
 }
 
-var addMarker = function(start, end, markerClass) {
-  editor.session.addMarker(range(start,end), markerClass, "fullLine", false);
-};
+var errorMarkerClass = "errorMarker";
+var warningMarkerClass = "warningMarker";
 
-var setAnnotations = function(annotations) {
-  clearMarkers();
-  for (var i = 0; i < annotations.length; i++) {
-    setMarker(annotations[i]);
-  }
-  editor.session.setAnnotations(annotations);
-};
+function CodeEditor(id) {
+	var self = this;
+	self.id = id;
+	self.editor = ace.edit(id);
+	self.editor.session.setMode("ace/mode/didelphissca");
+	self.editor.renderer.setOption("fontFamily", fontFamilies);
+	self.editor.on("change", function(delta) {
+		var annotations = self.getAnnotations();
+		var deltaRange = range(delta.start.row, delta.end.row);
+		for (var i = 0; i < annotations.length;) {
+			var annotation = annotations[i];
+			var annotationRange = range(annotation.row, annotation.end);
+			if (deltaRange.intersects(annotationRange)) {
+				annotations.splice(i, 1);
+			} else {
+				i++;
+			}
+		}
+		self.setAnnotations(annotations);
+	});
 
-var setMarker = function (annotation) {
-  var row  = annotation.row;
-  var end  = annotation.end;
-  var type = annotation.type;
+	self.setValue = function (data) {
+		self.editor.setValue(data);
+	};
 
-  if (type === "error") {
-    addMarker(row, end, errorMarkerClass);
-  } else
-  if (type === "warn") {
-    addMarker(row, end, warnMarkerClass);
-  }
-};
+	self.getValue = function () {
+		return self.editor.getValue();
+	};
 
-var clearMarkers = function () {
-  var session = editor.session;
-  var markers = session.getMarkers(false);
-  for (var key in markers) {
-    if (markers.hasOwnProperty(key)) {
-      var element = markers[key];
-      if (element.clazz === errorMarkerClass || element.clazz === warningMarkerClass) {
-        session.removeMarker(element.id);
-      }
-    }
-  }
-};
+	self.setShowInvisibles = function (b) {
+		self.editor.setShowInvisibles(b);
+	};
+
+	self.resize = function () {
+		self.editor.resize();
+	};
+
+	self.setNode = function (node) {
+		self.node = node;
+	};
+
+	self.getNode = function () {
+		return self.node;
+	};
+
+	self.setTheme = function (theme) {
+		self.editor.setTheme("ace/theme/"+theme);
+	};
+
+	self.setFontSize = function (size) {
+		self.editor.setFontSize(size);
+	};
+
+	self.getAnnotations = function () {
+		return self.editor.session.getAnnotations();
+	};
+
+	self.addMarker = function (start, end, markerClass) {
+		self.editor.session.addMarker(range(start, end), markerClass, "fullLine", false);
+	};
+
+	self.setAnnotations = function (annotations) {
+		self.clearMarkers();
+		for (var i = 0; i < annotations.length; i++) {
+			self.setMarker(annotations[i]);
+		}
+		self.editor.session.setAnnotations(annotations);
+	};
+
+	self.setMarker = function (annotation) {
+		var row  = annotation.row;
+		var end  = annotation.end;
+		var type = annotation.type;
+
+		if (type === "error") {
+			self.addMarker(row, end, errorMarkerClass);
+		}
+		if (type === "warn") {
+			self.addMarker(row, end, warningMarkerClass);
+		}
+	};
+
+	self.clearMarkers = function () {
+		var session = self.editor.session;
+		var markers = session.getMarkers(false);
+		for (var key in markers) {
+			if (markers.hasOwnProperty(key)) {
+				var element = markers[key];
+				if (element.clazz === errorMarkerClass || element.clazz === warningMarkerClass) {
+					session.removeMarker(element.id);
+				}
+			}
+		}
+	};
+
+	self.clearAnnotations = function () {
+		self.editor.session.clearAnnotations();
+	};
+}
+
+function ErrorLogger(id) {
+	var self = this;
+	self.id = id;
+	var logger = ace.edit(id);
+	logger.setFontSize(12);
+	logger.session.setMode("ace/mode/didelphislog");
+	logger.session.setUseWorker(false);
+	logger.session.setUseWrapMode(true);
+	logger.setReadOnly(true);
+	logger.setShowPrintMargin(false);
+	logger.renderer.setOption("fontFamily", fontFamilies);
+	self.logger = logger;
+
+	self.resize = function () {
+		logger.resize();
+	};
+
+	self.setTheme = function (theme) {
+		logger.setTheme("ace/theme/"+theme);
+	};
+
+	self.clear = function () {
+		logger.setValue("", 0);
+	};
+
+	self.append = function (data) {
+		logger.insert(data);
+	};
+
+	self.resize = function () {
+		logger.resize();
+	};
+}
+
+function LexiconViewer(id) {
+	var self = this;
+	self.id = id;
+
+	self.createTable = function (data) {
+		$("#" + self.id).empty().append($(lexiconTableTemplate(data)));
+	};
+
+	self.initialize = function () {
+		self.table = $("#" + self.id).find("table").DataTable({
+			// "dom": "<'top'lf><'tablecontainer't><'bottom'p>",
+			"dom": "<'dtHead'lf>tp",
+			"scrollY": "300px",
+			"lengthMenu": [ 25, 50, 100, 200 ],
+			"pageLength": 50,
+			"scrollCollapse": true
+		});
+		$(document).ready( function () { self.resize(); });
+	};
+
+	self.addData = function (data) {
+		var body = $("#" + self.id).find("tbody");
+		var row  = $(lexiconRowTemplate(data));
+		body.append(row);
+	};
+
+	self.resize = function () {
+		var container = $("#" + self.id);
+		if (container.find("table").length) {
+			var currHeightTotal = container.children().first().height();
+			var parentHeight = container.parent().height();
+			var delta = parentHeight - currHeightTotal;
+			var scroller = container.find(".dataTables_scrollBody");
+			if (scroller) {
+				var maxHeight = parseInt(scroller.css("max-height").replace("px",""));
+				scroller.css("max-height", "" + (maxHeight + delta - 20) + "px");
+			}
+		}
+	};
+}
