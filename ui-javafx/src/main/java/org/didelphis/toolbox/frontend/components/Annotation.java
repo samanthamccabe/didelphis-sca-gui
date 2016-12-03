@@ -1,43 +1,46 @@
 package org.didelphis.toolbox.frontend.components;
 
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.didelphis.soundchange.ErrorLogger;
+
 /**
  * Created by samantha on 11/11/16.
  * Used to interface with Ace editor annotations
  */
-public class Annotation {
+public final class Annotation {
 
 	private final int row;
 	private final int end;
-	private final String text;
 	private final String html;
 	private final Type type;
 	
-	public static Annotation errorHTML(int row, int end, String html) {
-		return new Annotation(row, end, null, html, Type.error);
+	public static Annotation error(ErrorLogger.Error error) {
+		String html4 = StringEscapeUtils.escapeHtml4(error.getMessage());
+		int length = error.getData().split("\r\n?|\n").length - 1;
+		return new Annotation(error.getLine(), length, html4, Type.error);
+	}
+	
+	public static Annotation error(int row, int end, String html) {
+		return new Annotation(row, end, html, Type.error);
 	}
 
-	public static Annotation warnHTML(int row, int end, String html) {
-		return new Annotation(row, end, null, html, Type.warn);
+	public static Annotation warn(int row, int end, String html) {
+		return new Annotation(row, end, html, Type.warn);
 	}
 
-	public static Annotation infoHTML(int row, int end, String html) {
-		return new Annotation(row, end, null, html, Type.info);
+	public static Annotation info(int row, int end, String html) {
+		return new Annotation(row, end, html, Type.info);
 	}
 
-	private Annotation(int row, int rowSpan, String text, String html, Type type) {
+	private Annotation(int row, int rowSpan, String html, Type type) {
 		this.row = row;
-		this.text = text;
 		this.html = html;
 		this.type = type;
-		this.end = rowSpan;
+		this.end = row + rowSpan;
 	}
 
 	public int getRow() {
 		return row;
-	}
-
-	public String getText() {
-		return text;
 	}
 
 	public String getHtml() {
@@ -56,5 +59,15 @@ public class Annotation {
 
 	public int getEnd() {
 		return end;
+	}
+
+	@Override
+	public String toString() {
+		return "Annotation{" +
+				"row=" + row +
+				", end=" + end +
+				", html='" + html + '\'' +
+				", type=" + type +
+				'}';
 	}
 }

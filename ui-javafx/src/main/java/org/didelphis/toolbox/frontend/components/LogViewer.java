@@ -16,6 +16,7 @@ package org.didelphis.toolbox.frontend.components;
 
 import javafx.scene.web.WebEngine;
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.didelphis.soundchange.ErrorLogger;
 
 /**
  * Samantha Fiona Morrigan McCabe
@@ -36,8 +37,11 @@ public class LogViewer extends Component {
 		execute("errorLogger.setTheme(\"ace/theme/" + theme + "\")");
 	}
 
-	public void error(String script, int line, String data) {
-		log("ERROR", script, line, data);
+	public void error(ErrorLogger.Error error) {
+		log("ERROR", error.getScript(), error.getLine(), error.getData(), error.getMessage());
+	}
+	public void error(String script, int line, String data, String message) {
+		log("ERROR", script, line, data, message);
 	}
 
 	public void info(String script, String... strings) {
@@ -52,10 +56,10 @@ public class LogViewer extends Component {
 		execute("errorLogger.append(\"" + escaped + "\");");
 	}
 
-	private void log(String code, String script, int line, String data) {
+	private void log(String code, String script, int line, String data, String message) {
 		String n = String.valueOf(line);
 		String escaped = StringEscapeUtils.escapeEcmaScript(
-				build("[", code, "] line: ", n, " ", script, " | ", data, "\n")
+				build("[", code, "] line: ", n, " ", script, " | ",message, "\n", data, "\n")
 		);
 		execute("errorLogger.append(\"" + escaped + "\");");
 	}

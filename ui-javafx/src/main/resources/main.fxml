@@ -35,10 +35,10 @@
           <menus>
             <Menu text="File">
               <items>
-                <MenuItem accelerator="Shortcut+N" onAction="#newFile" text="New" />
-                <MenuItem accelerator="Shortcut+O" onAction="#openFile" text="Open" />
-                <MenuItem accelerator="Shortcut+S" onAction="#saveFile" text="Save" />
-                <MenuItem accelerator="Shortcut+Shift+S" onAction="#saveAsFile" text="Save As" />
+                <MenuItem accelerator="Shortcut+N" onAction="#newProject" text="New" />
+                <MenuItem accelerator="Shortcut+O" onAction="#openProject" text="Open" />
+                <MenuItem accelerator="Shortcut+S" onAction="#saveProjectFile" text="Save" />
+                <MenuItem accelerator="Shortcut+Shift+S" onAction="#saveProjectAs" text="Save As" />
               </items>
             </Menu>
             <Menu text="Project">
