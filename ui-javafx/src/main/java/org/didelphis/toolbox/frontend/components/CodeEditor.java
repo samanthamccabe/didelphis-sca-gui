@@ -19,15 +19,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import javafx.scene.web.WebEngine;
 import org.apache.commons.lang3.StringEscapeUtils;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
 import java.util.List;
 
 /**
  * Samantha Fiona Morrigan McCabe
  * Created: 11/15/2016
+ *
+ * Component for managing Ace editors
  */
 public class CodeEditor extends Component {
-
-	private String editingCode;
 
 	public CodeEditor(String id, WebEngine engine) {
 		super(id, engine);
@@ -35,13 +40,20 @@ public class CodeEditor extends Component {
 
 	@Override
 	public void generate() {
-		// TODO:
+		// TODO: ??
 	}
 
 	public void setCode(String newCode) {
-		editingCode = newCode;
 		String escaped = StringEscapeUtils.escapeEcmaScript(newCode);
 		execute("codeEditors[\"" + getId() + "\"].setValue(\"" + escaped + "\");");
+	}
+
+	public void saveEditor(File file) {
+		try (Writer writer = new BufferedWriter(new FileWriter(file))) {
+			writer.write(getCodeAndSnapshot());
+		} catch (IOException e) {
+			// TODO:
+		}
 	}
 
 	public String getCodeAndSnapshot() {
@@ -50,7 +62,7 @@ public class CodeEditor extends Component {
 
 
 	public void setShowHiddenCharacters(boolean b) {
-		execute("codeEditors[\"" + getId() + "\"].setShowInvisibles(" + b + ")");
+		execute("codeEditors[\"" + getId() + "\"].setShowInvisibles(" + b + ')');
 	}
 
 	public void clearErrorMarkers() {
@@ -61,7 +73,7 @@ public class CodeEditor extends Component {
 	public void addAnnotations(List<Annotation> annotations) {
 		try {
 			String val = new ObjectMapper().writeValueAsString(annotations);
-			execute("codeEditors[\"" + getId() + "\"].setAnnotations(" + val + ")");
+			execute("codeEditors[\"" + getId() + "\"].setAnnotations(" + val + ')');
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
@@ -72,6 +84,6 @@ public class CodeEditor extends Component {
 	}
 
 	public void setFontSize(Number fontSize) {
-		execute("codeEditors[\"" + getId() + "\"].setFontSize(" + fontSize + ")");
+		execute("codeEditors[\"" + getId() + "\"].setFontSize(" + fontSize + ')');
 	}
 }

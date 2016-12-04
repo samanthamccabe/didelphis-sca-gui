@@ -22,172 +22,98 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.stage.FileChooser;
-import org.apache.commons.io.FileUtils;
-import org.didelphis.toolbox.frontend.components.CodeEditor;
-import org.didelphis.toolbox.frontend.components.LogViewer;
 import org.didelphis.toolbox.frontend.components.PanelController;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.ResourceBundle;
 
 /**
- * Samantha Fiona Morrigan McCabe
- * Created: 2/3/2016
+ * Primary controller for the Didelphis UI
  */
-public class Controller implements Initializable {
+public final class Controller implements Initializable {
 	
 	private static final FileChooser.ExtensionFilter SCRIPT_EXTENSION_FILTER =
 			new FileChooser.ExtensionFilter("Script Files", "*.rule", "*.*");
-	
-		private static final String MAIN = "main";
-
-	private final static Map<String, String> THEMES = new LinkedHashMap<>();
-	private final static List<String> THEME_LIST;
-
-	static {
-		THEMES.put("Chrome",                  "light");
-		THEMES.put("Clouds",                  "light");
-		THEMES.put("Crimson Editor",          "light");
-		THEMES.put("Dawn",                    "light");
-		THEMES.put("Dreamweaver",             "light");
-		THEMES.put("Eclipse",                 "light");
-		THEMES.put("GitHub",                  "light");
-		THEMES.put("IPlastic",                "light");
-		THEMES.put("Katzenmilch",             "light");
-		THEMES.put("Kuroir",                  "light");
-		THEMES.put("Solarized Light",         "light");
-		THEMES.put("SQLServer",               "light");
-		THEMES.put("Textmate",                "light");
-		THEMES.put("Tomorrow",                "light");
-		THEMES.put("XCode",                   "light");
-		THEMES.put("Chaos",                   "dark");
-		THEMES.put("Clouds Midnight",         "dark");
-		THEMES.put("Cobalt",                  "dark");// blue
-		THEMES.put("Idle Fingers",            "dark");
-		THEMES.put("KR Theme",                "dark");
-		THEMES.put("Merbivore",               "dark");
-		THEMES.put("Merbivore Soft",          "dark");
-		THEMES.put("Mono Industrial",         "dark");
-		THEMES.put("Monokai",                 "dark");
-		THEMES.put("Pastel On Dark",          "dark");
-		THEMES.put("Solarized Dark",          "dark");// blue
-		THEMES.put("Terminal",                "dark");
-		THEMES.put("Tomorrow Night",          "dark");
-		THEMES.put("Tomorrow Night Blue",     "dark");// blue
-		THEMES.put("Tomorrow Night Bright",   "dark");
-		THEMES.put("Tomorrow Night Eighties", "dark");
-		THEMES.put("Twilight",                "dark");
-		THEMES.put("Vibrant Ink",             "dark");
-		THEME_LIST = new ArrayList<>(THEMES.keySet());
-	}
 
 	@FXML private ChoiceBox<String> themePicker;
 	@FXML private Spinner<Integer> fontSizeSpinner;
 	@FXML private PanelController panelController;
 	@FXML private CheckBox hiddenCharBox;
-	
-	public Controller() {}
+	private File currentFolder;
+
+	public Controller(){}
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
+		currentFolder = new File("./");
+
 		themePicker.setValue("Chrome");
-		themePicker.setItems(FXCollections.observableArrayList(THEMES.keySet()));
-		themePicker.getSelectionModel().selectedIndexProperty().addListener(
-				//TODO: panelController could return listener?
-				(observable, oldValue, newValue) -> {
-					String name = THEME_LIST.get((int) newValue);
-					String theme = name.toLowerCase().replaceAll("\\s", "_");
-					panelController.setTheme(THEMES.get(name), theme);
-				});
+		themePicker.setItems(FXCollections.observableArrayList(ThemeManager.listThemes()));
+
 		fontSizeSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(4,24,14));
 		fontSizeSpinner.setEditable(true);
-		fontSizeSpinner.valueProperty().addListener(
-				//TODO: panelController could return listener?
-				(observable, oldValue, newValue) ->  {
-					for (CodeEditor editor : panelController.getCodeEditors().values()) {
-						editor.setFontSize(newValue);
-					}
-				});
-		hiddenCharBox.selectedProperty().addListener(
-				//TODO: panelController could return listener?
-				(observable, oldValue, newValue) -> {
-					for (CodeEditor editor : panelController.getCodeEditors().values()) {
-						editor.setShowHiddenCharacters(newValue);
-					}
-				});
+
+		panelController.addThemeListenerTo(themePicker.getSelectionModel().selectedIndexProperty());
+		panelController.addFontSizeListenerTo(fontSizeSpinner.valueProperty());
+		panelController.addHiddenCharListenerTo(hiddenCharBox.selectedProperty());
+	}
+
+	public void runScript() {
+		panelController.runScript();
+	}
+
+	public void compileScript() {
+		panelController.compileScript();
 	}
 
 	public void openProject() {
-		FileChooser chooser = chooser("Open Script");
+		FileChooser chooser = newChooser("Open Script");
 		File file = chooser.showOpenDialog(null);
 		if (file != null) {
+			currentFolder = file.getParentFile();
 			panelController.openProject(file);
 		}
 	}
 	
 	public void saveProjectAs() {
-		FileChooser chooser = chooser("Save Script");
+		FileChooser chooser = newChooser("Save Script");
 		File file = chooser.showSaveDialog(null);
 		if (file != null) {
-			try {
-				CodeEditor editor = panelController.getCodeEditors().get(MAIN);
-				// TODO: add hooks for saving other files
-				String data = editor.getCodeAndSnapshot();
-				FileUtils.write(file, data);
-			} catch (IOException e) {
-				LogViewer logViewer = panelController.getLogViewer();
-				logViewer.error(file.toString(), -1, "", e.toString());
-			}
+			currentFolder = file.getParentFile();
+			panelController.saveProjectAs(file);
 		}
 	}
 
 	public void newProject() {
-		// TODO: clear current state
-		FileChooser chooser = chooser("New Script");
+		FileChooser chooser = newChooser("New Script");
 		File file = chooser.showSaveDialog(null);
 		if (file != null) {
-			try {
-				CodeEditor editor = panelController.getCodeEditors().get(MAIN);
-				String data = editor.getCodeAndSnapshot();
-				FileUtils.write(file, data);
-			} catch (IOException e) {
-				LogViewer logViewer = panelController.getLogViewer();
-				logViewer.error(file.toString(), -1, "", e.toString());
-			}
+			currentFolder = file.getParentFile();
+			panelController.newProject(file);
 		}
 	}
 
 	public void saveProjectFile() {
-		if (scriptFile != null) {
-			try {
-				CodeEditor editor = panelController.getCodeEditors().get(MAIN);
-				// TODO: add hooks for saving other files
-				String data = editor.getCodeAndSnapshot();
-				FileUtils.write(scriptFile, data);
-			} catch (IOException e) {
-				LogViewer logViewer = panelController.getLogViewer();
-				logViewer.error(getFileName(), -1, "", e.toString());
-			}
-		} else {
-			saveProjectAs();
-		}
+		panelController.saveProject();
 	}
 	
-	private FileChooser chooser(String title) {
+	private FileChooser newChooser(String title) {
 		FileChooser chooser = new FileChooser();
 		chooser.setTitle(title);
 		chooser.getExtensionFilters().addAll(SCRIPT_EXTENSION_FILTER);
-		chooser.setInitialDirectory(getParentFile());
+		chooser.setInitialDirectory(currentFolder);
 		return chooser;
 	}
 
-	private File getParentFile() {
-		return scriptFile != null ? scriptFile.getParentFile() : new File("./");
+	@Override
+	public String toString() {
+		return "Controller{" +
+				"themePicker=" + themePicker +
+				", fontSizeSpinner=" + fontSizeSpinner +
+				", panelController=" + panelController +
+				", hiddenCharBox=" + hiddenCharBox +
+				", currentFolder=" + currentFolder +
+				'}';
 	}
 }

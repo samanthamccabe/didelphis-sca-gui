@@ -14,6 +14,9 @@
 
 package org.didelphis.toolbox.frontend.components;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ReadOnlyIntegerProperty;
+import javafx.beans.property.ReadOnlyProperty;
 import javafx.scene.layout.StackPane;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
@@ -24,6 +27,7 @@ import org.didelphis.soundchange.ErrorLogger;
 import org.didelphis.soundchange.SoundChangeScript;
 import org.didelphis.soundchange.StandardScript;
 import org.didelphis.soundchange.command.LexiconIOCommand;
+import org.didelphis.toolbox.frontend.ThemeManager;
 import org.didelphis.toolbox.frontend.data.LexiconData;
 import org.jetbrains.annotations.NotNull;
 
@@ -41,11 +45,13 @@ import java.util.regex.Pattern;
  * Samantha Fiona Morrigan McCabe
  * Created: 10/29/2016
  */
-public class PanelController extends StackPane {
+public final class PanelController extends StackPane {
 	private static final DecimalFormat FORMAT = new DecimalFormat("#0.00");
 
+	private static final Pattern TRIM_PATH = Pattern.compile(".*[/\\\\]");
 	private static final Pattern NEWLINE = Pattern.compile("\\r|\\r?\\n");
 	private static final double MILLI = 1.0E-6;
+	private static final String DEFAULT = "main";
 
 	private final WebEngine engine;
 	
@@ -54,6 +60,7 @@ public class PanelController extends StackPane {
 	private final Map<String, LexiconViewer> lexiconViewers;
 	
 	private final LogViewer logViewer;
+	private final FileHandler fileHandler;
 
 	public PanelController() {
 		super();
@@ -62,7 +69,6 @@ public class PanelController extends StackPane {
 
 		WebView webview = new WebView();
 		engine = webview.getEngine();
-
 		engine.load(getResourceURL());
 		getChildren().add(webview);
 
@@ -70,75 +76,134 @@ public class PanelController extends StackPane {
 		logViewer = new LogViewer("logViewer", engine);
 
 		// Populate initial view
-		addCodeEditor("");
+		addCodeEditor(DEFAULT);
 
 		engine.setOnAlert(event -> System.out.println(event.toString()));
 		engine.setOnError(event -> System.err.println(event.toString()));
+		fileHandler = new DiskFileHandler("UTF-8");
 	}
-	
+
+	public void saveProjectAs(File file) {
+			CodeEditor editor = codeEditors.get(DEFAULT);
+			// TODO: add hooks for saving other files
+			// Paths generated programmatically based on references in the script?
+			editor.saveEditor(file);
+	}
+
+	public void newProject(File file) {
+		// TODO: clear state
+		CodeEditor editor = codeEditors.get(DEFAULT);
+		editor.saveEditor(file);
+	}
+
 	public void openProject(File file) {
 		try {
 			String data = FileUtils.readFileToString(file);
-			codeEditors.get(0).setCode(data);
+			codeEditors.get(DEFAULT).setCode(data);
 			compileScript();
 			// TODO: add hooks for opening other files
 		} catch (IOException e) {
-			LogViewer logViewer = getLogViewer();
 			logViewer.error(file.toString(), -1, "",e.toString());
 		}
 	}
 
+	public void addThemeListenerTo(ReadOnlyIntegerProperty property) {
+		property.addListener((observable, oldValue, newValue) -> {
+			String name = ThemeManager.get((int) newValue);
+			String type = ThemeManager.getType(name);
+			String normalized = ThemeManager.getNormalized((int) newValue);
+			setTheme(type, normalized);
+		});
+	}
+
+	public void addFontSizeListenerTo(ReadOnlyProperty<Integer> property) {
+		property.addListener((observable, oldValue, newValue) ->  {
+			for (CodeEditor editor : codeEditors.values()) {
+						editor.setFontSize(newValue);
+					}
+				}
+		);
+	}
+
+	public void addHiddenCharListenerTo(BooleanProperty property) {
+		property.addListener((observable, oldValue, newValue) -> {
+			for (CodeEditor editor : codeEditors.values()) {
+				editor.setShowHiddenCharacters(newValue);
+			}
+		});
+	}
+
+	public void saveProject() {
+		for (Map.Entry<String, CodeEditor> entry : codeEditors.entrySet()) {
+			String pathname = entry.getKey();
+			try {
+				File file = new File(pathname);
+				CodeEditor editor = entry.getValue();
+				String code = editor.getCodeAndSnapshot();
+				FileUtils.write(file, code);
+			} catch (IOException e) {
+				logViewer.error(pathname, -1, "", e.toString());
+			}
+		}
+	}
+
 	public void compileScript() {
-		CodeEditor editor = getCodeEditors().get("");
+		String editorKey = DEFAULT; // TODO: clean up
+		CodeEditor editor = codeEditors.get(editorKey);
 		String code = editor.getCodeAndSnapshot();
 		FileHandler handler = new DiskFileHandler("UTF-8");
-		LogViewer logViewer = getLogViewer();
 
 		ErrorLogger errorLogger = new ErrorLogger();
 		errorLogger.clear();
 		logViewer.clearLog();
 		clearErrorMarkers();
 		try {
-//			String fileName = getFileName();
-			logViewer.info(fileName, "processing");
+			logViewer.info(editorKey, "processing");
 
 			long start = System.nanoTime();
-			StandardScript script = new StandardScript(fileName, code, handler, errorLogger);
+			StandardScript script = new StandardScript(editorKey, code, handler, errorLogger);
 			long end = System.nanoTime();
-			double elapsed = (end-start) * 1.0E-6;
 			if (errorLogger.isEmpty()) {
-				logViewer.info(fileName, "compiled successfully in ",
+				double elapsed = (end - start) * 1.0E-6;
+				logViewer.info(editorKey, "compiled successfully in ",
 						FORMAT.format(elapsed), " ms");
 			} else {
 				logErrors(errorLogger);
 			}
 
 		} catch (Exception e) {
-			StringBuilder sb = new StringBuilder(e.toString());
-			for (StackTraceElement element : e.getStackTrace()) {
-				sb.append("\n");
-				sb.append(element);
-			}
-			logViewer.error(getFileName(), -1,
-					"Unhandled error while compiling script! ", sb.toString());
+			String stackTrace = makeStackTrace(e);
+			logViewer.error(editorKey, -1,
+					"Unhandled error while compiling script! ", stackTrace);
 		}
 	}
 
+	@NotNull
+	private static String makeStackTrace(Exception e) {
+		StringBuilder sb = new StringBuilder(e.toString());
+		for (StackTraceElement element : e.getStackTrace()) {
+			sb.append('\n');
+			sb.append(element);
+		}
+		return sb.toString();
+	}
+
 	public void runScript() {
-		CodeEditor editor = codeEditors.get("");
+		CodeEditor editor = codeEditors.get(DEFAULT);
 		String code = editor.getCodeAndSnapshot();
-		FileHandler handler = new DiskFileHandler("UTF-8");
 
 		ErrorLogger errorLogger = new ErrorLogger();
 		errorLogger.clear();
 		logViewer.clearLog();
 		clearErrorMarkers();
+
+		String fileName = editor.getId(); // TODO:
 		try {
-			String fileName = getFileName();
 			logViewer.info(fileName, "processing");
 
 			long start = System.nanoTime();
-			StandardScript script = new StandardScript(fileName, code, handler, errorLogger);
+			StandardScript script = new StandardScript(fileName, code,
+					fileHandler, errorLogger);
 			script.process();
 			long end = System.nanoTime();
 			double elapsed = (end - start) * MILLI;
@@ -164,19 +229,19 @@ public class PanelController extends StackPane {
 				sb.append("\n");
 				sb.append(element);
 			}
-			logViewer.error(getFileName(), -1,
+			logViewer.error(fileName, -1,
 					"Unhandled error while running script! ", sb.toString());
 		}
 	}
 
 	@NotNull
-	private LexiconData buildLexicons(SoundChangeScript script) {
+	private static LexiconData buildLexicons(SoundChangeScript script) {
 		LexiconData lexiconGroups = new LexiconData();
 		for (Runnable runnable :  script.getCommands()) {
 			if (runnable instanceof LexiconIOCommand) {
 				LexiconIOCommand ioCommand = (LexiconIOCommand) runnable;
 				String filePath = ioCommand.getFilePath();
-				String path = filePath.replaceAll(".*[/\\\\]","");
+				String path = TRIM_PATH.matcher(filePath).replaceAll("");
 				String handle = ioCommand.getFileHandle();
 				FileHandler fileHandler = ioCommand.getFileHandler();
 				List<String> list = fileHandler.readLines(filePath);
@@ -192,7 +257,7 @@ public class PanelController extends StackPane {
 		return lexiconGroups;
 	}
 
-	public CodeEditor addCodeEditor(String id) {
+	private CodeEditor addCodeEditor(String id) {
 		if (!codeEditors.containsKey(id)) {
 			CodeEditor value = new CodeEditor(id, engine);
 			codeEditors.put(id, value);
@@ -202,7 +267,7 @@ public class PanelController extends StackPane {
 		}
 	}
 
-	public LexiconViewer addLexiconView(String id) {
+	private LexiconViewer addLexiconView(String id) {
 		if (!lexiconViewers.containsKey(id)) {
 			LexiconViewer value = new LexiconViewer(id, engine);
 			lexiconViewers.put(id, value);
@@ -212,37 +277,13 @@ public class PanelController extends StackPane {
 		}
 	}
 
-	public Map<String, CodeEditor> getCodeEditors() {
-		return codeEditors;
-	}
-
-	public Map<String, LexiconViewer> getLexiconViewers() {
-		return lexiconViewers;
-	}
-
-	public CodeEditor getCodeEditor(String id) {
-		return codeEditors.get(id);
-	}
-	
-	public LexiconViewer getLexiconViewer(String id) {
-		return lexiconViewers.get(id);
-	}
-
-	public WebEngine getWebEngine() {
-		return engine;
-	}
-
-	public LogViewer getLogViewer() {
-		return logViewer;
-	}
-
-	public void clearErrorMarkers() {
+	private void clearErrorMarkers() {
 		for (CodeEditor editor : codeEditors.values()) {
 			editor.clearErrorMarkers();
 		}
 	}
 
-	public void logErrors(Iterable<ErrorLogger.Error> errors) {
+	private void logErrors(Iterable<ErrorLogger.Error> errors) {
 		logViewer.clearLog();
 		for (ErrorLogger.Error error : errors) {
 			logViewer.error(error);
@@ -257,11 +298,15 @@ public class PanelController extends StackPane {
 		return resource != null ? resource.toExternalForm() : null;
 	}
 
-	public void setTheme(String type, String name) {
+	private void setTheme(String type, String name) {
 		engine.executeScript("setTheme(\'"+type+"\',\'"+name+"\')");
 	}
 
-//	private String getFileName() {
-//		return scriptFile == null ? "null" : scriptFile.toString();
-//	}
+	@Override
+	public String toString() {
+		return "PanelController{" +
+				", codeEditors=" + codeEditors +
+				", lexiconViewers=" + lexiconViewers +
+				'}';
+	}
 }
