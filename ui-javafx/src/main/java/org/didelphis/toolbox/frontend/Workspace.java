@@ -23,21 +23,21 @@ import java.util.Map;
  */
 public class Workspace {
 	
-	private final Map<String, Project> projects;
+	private final Map<String, ProjectFile> projects;
 	
 	public Workspace() {
 		projects = new LinkedHashMap<>();
 	}
 	
-	public Project getProject(String id) {
+	public ProjectFile getProject(String id) {
 		return projects.get(id);
 	}
 	
-	public void addProject(String id, Project project) {
+	public void addProject(String id, ProjectFile project) {
 		projects.put(id, project);
 	}
 	
-	public Project deleteProject(String id) {
+	public ProjectFile deleteProject(String id) {
 		return projects.remove(id);
 	}
 }

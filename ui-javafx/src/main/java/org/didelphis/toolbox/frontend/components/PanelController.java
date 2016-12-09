@@ -14,9 +14,7 @@
 
 package org.didelphis.toolbox.frontend.components;
 
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ReadOnlyIntegerProperty;
-import javafx.beans.property.ReadOnlyProperty;
+import javafx.beans.value.ObservableValue;
 import javafx.scene.layout.StackPane;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
@@ -26,7 +24,8 @@ import org.didelphis.io.FileHandler;
 import org.didelphis.soundchange.ErrorLogger;
 import org.didelphis.soundchange.SoundChangeScript;
 import org.didelphis.soundchange.StandardScript;
-import org.didelphis.soundchange.command.LexiconIOCommand;
+import org.didelphis.soundchange.command.io.AbstractLexiconIoCommand;
+import org.didelphis.toolbox.frontend.ProjectFile;
 import org.didelphis.toolbox.frontend.ThemeManager;
 import org.didelphis.toolbox.frontend.data.LexiconData;
 import org.jetbrains.annotations.NotNull;
@@ -44,14 +43,14 @@ import java.util.regex.Pattern;
 /**
  * Samantha Fiona Morrigan McCabe
  * Created: 10/29/2016
- */
+ */ 
 public final class PanelController extends StackPane {
 	private static final DecimalFormat FORMAT = new DecimalFormat("#0.00");
 
 	private static final Pattern TRIM_PATH = Pattern.compile(".*[/\\\\]");
 	private static final Pattern NEWLINE = Pattern.compile("\\r|\\r?\\n");
 	private static final double MILLI = 1.0E-6;
-	private static final String DEFAULT = "main";
+	private static final String ROOT_ID = "main";
 
 	private final WebEngine engine;
 	
@@ -61,9 +60,10 @@ public final class PanelController extends StackPane {
 	
 	private final LogViewer logViewer;
 	private final FileHandler fileHandler;
+	
+	private ProjectFile projectRoot;
 
 	public PanelController() {
-		super();
 		codeEditors = new HashMap<>();
 		lexiconViewers = new HashMap<>();
 
@@ -76,15 +76,17 @@ public final class PanelController extends StackPane {
 		logViewer = new LogViewer("logViewer", engine);
 
 		// Populate initial view
-		addCodeEditor(DEFAULT);
+		addCodeEditor(ROOT_ID);
 
-		engine.setOnAlert(event -> System.out.println(event.toString()));
-		engine.setOnError(event -> System.err.println(event.toString()));
+		engine.setOnAlert(System.out::println);
+		engine.setOnError(System.err::println);
 		fileHandler = new DiskFileHandler("UTF-8");
+
+		projectRoot = new ProjectFile(ROOT_ID, new File("./"));
 	}
 
 	public void saveProjectAs(File file) {
-			CodeEditor editor = codeEditors.get(DEFAULT);
+			CodeEditor editor = codeEditors.get(ROOT_ID);
 			// TODO: add hooks for saving other files
 			// Paths generated programmatically based on references in the script?
 			editor.saveEditor(file);
@@ -92,14 +94,14 @@ public final class PanelController extends StackPane {
 
 	public void newProject(File file) {
 		// TODO: clear state
-		CodeEditor editor = codeEditors.get(DEFAULT);
+		CodeEditor editor = codeEditors.get(ROOT_ID);
 		editor.saveEditor(file);
 	}
 
 	public void openProject(File file) {
 		try {
 			String data = FileUtils.readFileToString(file);
-			codeEditors.get(DEFAULT).setCode(data);
+			codeEditors.get(ROOT_ID).setCode(data);
 			compileScript();
 			// TODO: add hooks for opening other files
 		} catch (IOException e) {
@@ -107,7 +109,7 @@ public final class PanelController extends StackPane {
 		}
 	}
 
-	public void addThemeListenerTo(ReadOnlyIntegerProperty property) {
+	public void addThemeListenerTo(ObservableValue<Number> property) {
 		property.addListener((observable, oldValue, newValue) -> {
 			String name = ThemeManager.get((int) newValue);
 			String type = ThemeManager.getType(name);
@@ -116,7 +118,7 @@ public final class PanelController extends StackPane {
 		});
 	}
 
-	public void addFontSizeListenerTo(ReadOnlyProperty<Integer> property) {
+	public void addFontSizeListenerTo(ObservableValue<Integer> property) {
 		property.addListener((observable, oldValue, newValue) ->  {
 			for (CodeEditor editor : codeEditors.values()) {
 						editor.setFontSize(newValue);
@@ -125,7 +127,7 @@ public final class PanelController extends StackPane {
 		);
 	}
 
-	public void addHiddenCharListenerTo(BooleanProperty property) {
+	public void addHiddenCharListenerTo(ObservableValue<Boolean> property) {
 		property.addListener((observable, oldValue, newValue) -> {
 			for (CodeEditor editor : codeEditors.values()) {
 				editor.setShowHiddenCharacters(newValue);
@@ -148,7 +150,7 @@ public final class PanelController extends StackPane {
 	}
 
 	public void compileScript() {
-		String editorKey = DEFAULT; // TODO: clean up
+		String editorKey = ROOT_ID;
 		CodeEditor editor = codeEditors.get(editorKey);
 		String code = editor.getCodeAndSnapshot();
 		FileHandler handler = new DiskFileHandler("UTF-8");
@@ -189,7 +191,10 @@ public final class PanelController extends StackPane {
 	}
 
 	public void runScript() {
-		CodeEditor editor = codeEditors.get(DEFAULT);
+		String id = projectRoot.getId();
+		File file = projectRoot.getFile();
+		
+		CodeEditor editor = codeEditors.get(ROOT_ID);
 		String code = editor.getCodeAndSnapshot();
 
 		ErrorLogger errorLogger = new ErrorLogger();
@@ -197,7 +202,7 @@ public final class PanelController extends StackPane {
 		logViewer.clearLog();
 		clearErrorMarkers();
 
-		String fileName = editor.getId(); // TODO:
+//		String fileName = projectRoot.getId();
 		try {
 			logViewer.info(fileName, "processing");
 
@@ -238,12 +243,12 @@ public final class PanelController extends StackPane {
 	private static LexiconData buildLexicons(SoundChangeScript script) {
 		LexiconData lexiconGroups = new LexiconData();
 		for (Runnable runnable :  script.getCommands()) {
-			if (runnable instanceof LexiconIOCommand) {
-				LexiconIOCommand ioCommand = (LexiconIOCommand) runnable;
-				String filePath = ioCommand.getFilePath();
+			if (runnable instanceof AbstractLexiconIoCommand) {
+				AbstractLexiconIoCommand ioCommand = (AbstractLexiconIoCommand) runnable;
+				String filePath = ioCommand.getPath();
 				String path = TRIM_PATH.matcher(filePath).replaceAll("");
-				String handle = ioCommand.getFileHandle();
-				FileHandler fileHandler = ioCommand.getFileHandler();
+				String handle = ioCommand.getHandle();
+				FileHandler fileHandler = ioCommand.getHandler();
 				List<String> list = fileHandler.readLines(filePath);
 				if (lexiconGroups.containsKey(handle)) {
 					lexiconGroups.get(handle).put(path, list);
