@@ -49,12 +49,11 @@ public final class PanelController extends StackPane {
 
 	private static final Pattern TRIM_PATH = Pattern.compile(".*[/\\\\]");
 	private static final Pattern NEWLINE = Pattern.compile("\\r|\\r?\\n");
-	private static final double MILLI = 1.0E-6;
+	private static final long MILLI = 1000000L;
 	private static final String ROOT_ID = "main";
 
 	private final WebEngine engine;
 	
-	// Map from Path to 
 	private final Map<String, CodeEditor>    codeEditors;
 	private final Map<String, LexiconViewer> lexiconViewers;
 	
@@ -88,17 +87,21 @@ public final class PanelController extends StackPane {
 	public void saveProjectAs(File file) {
 			CodeEditor editor = codeEditors.get(ROOT_ID);
 			// TODO: add hooks for saving other files
+			// TODO: how to change relative paths of the files?
 			// Paths generated programmatically based on references in the script?
 			editor.saveEditor(file);
 	}
 
 	public void newProject(File file) {
+		projectRoot = new ProjectFile(ROOT_ID, file);
 		// TODO: clear state
 		CodeEditor editor = codeEditors.get(ROOT_ID);
 		editor.saveEditor(file);
 	}
 
 	public void openProject(File file) {
+		String id = file.getName();
+		projectRoot = new ProjectFile(id, file);
 		try {
 			String data = FileUtils.readFileToString(file);
 			codeEditors.get(ROOT_ID).setCode(data);
@@ -166,7 +169,7 @@ public final class PanelController extends StackPane {
 			StandardScript script = new StandardScript(editorKey, code, handler, errorLogger);
 			long end = System.nanoTime();
 			if (errorLogger.isEmpty()) {
-				double elapsed = (end - start) * 1.0E-6;
+				long elapsed = (end - start) / MILLI;
 				logViewer.info(editorKey, "compiled successfully in ",
 						FORMAT.format(elapsed), " ms");
 			} else {
@@ -191,7 +194,6 @@ public final class PanelController extends StackPane {
 	}
 
 	public void runScript() {
-		String id = projectRoot.getId();
 		File file = projectRoot.getFile();
 		
 		CodeEditor editor = codeEditors.get(ROOT_ID);
@@ -202,17 +204,20 @@ public final class PanelController extends StackPane {
 		logViewer.clearLog();
 		clearErrorMarkers();
 
-//		String fileName = projectRoot.getId();
+		String fileName = file.getName();
 		try {
 			logViewer.info(fileName, "processing");
 
 			long start = System.nanoTime();
-			StandardScript script = new StandardScript(fileName, code,
-					fileHandler, errorLogger);
+			SoundChangeScript script = new StandardScript(
+					fileName,
+					code,
+					fileHandler,
+					errorLogger);
 			script.process();
 			long end = System.nanoTime();
-			double elapsed = (end - start) * MILLI;
 			if (errorLogger.isEmpty()) {
+				long elapsed = (end - start) / MILLI;
 				logViewer.info(fileName, "ran successfully in ",
 						FORMAT.format(elapsed), " ms");
 			} else {
@@ -263,22 +268,22 @@ public final class PanelController extends StackPane {
 	}
 
 	private CodeEditor addCodeEditor(String id) {
-		if (!codeEditors.containsKey(id)) {
+		if (codeEditors.containsKey(id)) {
+			return codeEditors.get(id);
+		} else {
 			CodeEditor value = new CodeEditor(id, engine);
 			codeEditors.put(id, value);
 			return value;
-		} else {
-			return codeEditors.get(id);
 		}
 	}
 
 	private LexiconViewer addLexiconView(String id) {
-		if (!lexiconViewers.containsKey(id)) {
+		if (lexiconViewers.containsKey(id)) {
+			return lexiconViewers.get(id);
+		} else {
 			LexiconViewer value = new LexiconViewer(id, engine);
 			lexiconViewers.put(id, value);
 			return value;
-		} else {
-			return lexiconViewers.get(id);
 		}
 	}
 
@@ -300,7 +305,7 @@ public final class PanelController extends StackPane {
 		URL resource = PanelController.class
 				.getClassLoader()
 				.getResource("panelview.html");
-		return resource != null ? resource.toExternalForm() : null;
+		return (resource != null) ? resource.toExternalForm() : null;
 	}
 
 	private void setTheme(String type, String name) {
