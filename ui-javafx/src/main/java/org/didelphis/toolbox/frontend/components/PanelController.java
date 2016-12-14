@@ -153,34 +153,42 @@ public final class PanelController extends StackPane {
 	}
 
 	public void compileScript() {
+		File file = projectRoot.getFile();
+		
 		String editorKey = ROOT_ID;
 		CodeEditor editor = codeEditors.get(editorKey);
 		String code = editor.getCodeAndSnapshot();
 		FileHandler handler = new DiskFileHandler("UTF-8");
 
-		ErrorLogger errorLogger = new ErrorLogger();
-		errorLogger.clear();
-		logViewer.clearLog();
-		clearErrorMarkers();
+		ErrorLogger errorLogger = cleanErrorLogger();
+		String fileName = file.getAbsolutePath();
 		try {
 			logViewer.info(editorKey, "processing");
 
 			long start = System.nanoTime();
-			StandardScript script = new StandardScript(editorKey, code, handler, errorLogger);
+			StandardScript script = new StandardScript(fileName, code, handler, errorLogger);
 			long end = System.nanoTime();
 			if (errorLogger.isEmpty()) {
 				long elapsed = (end - start) / MILLI;
-				logViewer.info(editorKey, "compiled successfully in ",
+				logViewer.info(fileName, "compiled successfully in ",
 						FORMAT.format(elapsed), " ms");
 			} else {
 				logErrors(errorLogger);
 			}
-
 		} catch (Exception e) {
 			String stackTrace = makeStackTrace(e);
-			logViewer.error(editorKey, -1,
+			logViewer.error(fileName, -1,
 					"Unhandled error while compiling script! ", stackTrace);
 		}
+	}
+
+	@NotNull
+	private ErrorLogger cleanErrorLogger() {
+		ErrorLogger errorLogger = new ErrorLogger();
+		errorLogger.clear();
+		logViewer.clearLog();
+		clearErrorMarkers();
+		return errorLogger;
 	}
 
 	@NotNull
@@ -199,12 +207,8 @@ public final class PanelController extends StackPane {
 		CodeEditor editor = codeEditors.get(ROOT_ID);
 		String code = editor.getCodeAndSnapshot();
 
-		ErrorLogger errorLogger = new ErrorLogger();
-		errorLogger.clear();
-		logViewer.clearLog();
-		clearErrorMarkers();
-
-		String fileName = file.getName();
+		ErrorLogger errorLogger = cleanErrorLogger();
+		String fileName = file.getAbsolutePath();
 		try {
 			logViewer.info(fileName, "processing");
 

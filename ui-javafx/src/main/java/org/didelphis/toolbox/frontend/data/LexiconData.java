@@ -24,10 +24,6 @@ import java.util.List;
  */
 public class LexiconData extends LinkedHashMap<String, LinkedHashMap<String, List<String>>> {
 	
-	public LexiconData() {
-		super();
-	}
-	
 	public List<List<String>> getAsTable(String key) {
 		List<List<String>> list = new ArrayList<>();
 
