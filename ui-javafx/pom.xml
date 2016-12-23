@@ -25,6 +25,13 @@
 
     <artifactId>ui-javafx</artifactId>
 
+    <repositories>
+        <repository>
+            <id>com.teamdev</id>
+            <url>http://maven.teamdev.com/repository/products</url>
+        </repository>
+    </repositories>
+    
     <build>
         <plugins>
             <plugin>

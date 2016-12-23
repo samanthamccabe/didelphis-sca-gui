@@ -22,7 +22,7 @@ import org.didelphis.soundchange.ErrorLogger;
  * Samantha Fiona Morrigan McCabe
  * Created: 11/15/2016
  */
-public class LogViewer extends Component {
+public class LogViewer extends AbstractComponent {
 	
 	public LogViewer(String id, WebEngine engine) {
 		super(id, engine);
@@ -46,11 +46,11 @@ public class LogViewer extends Component {
 
 	public void info(String script, String... strings) {
 		StringBuilder stringbuilder = new StringBuilder();
-		stringbuilder.append("[INFO] ").append(script).append(" ");
+		stringbuilder.append("[INFO] ").append(script).append(' ');
 		for (String string : strings) {
 			stringbuilder.append(string);
 		}
-		stringbuilder.append("\n");
+		stringbuilder.append('\n');
 		String input = stringbuilder.toString();
 		String escaped = StringEscapeUtils.escapeEcmaScript(input);
 		execute("errorLogger.append(\"" + escaped + "\");");

@@ -22,7 +22,7 @@ import javafx.scene.web.WebEngine;
  * Samantha Fiona Morrigan McCabe
  * Created: 11/15/2016
  */
-public abstract class Component {
+public abstract class AbstractComponent {
 	
 	private final String id;
 	private final WebEngine webEngine;
@@ -34,7 +34,7 @@ public abstract class Component {
 	 *      <code>PanelController</code>
 	 * @param webEngine the WebView engine in which this component is rendered
 	 */
-	public Component(String id, WebEngine webEngine) {
+	public AbstractComponent(String id, WebEngine webEngine) {
 		this.id = id;
 		this.webEngine = webEngine;
 		mapper = new ObjectMapper();

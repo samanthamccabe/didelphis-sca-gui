@@ -43,26 +43,26 @@ import java.util.regex.Pattern;
 /**
  * Samantha Fiona Morrigan McCabe
  * Created: 10/29/2016
- */ 
+ */
 public final class PanelController extends StackPane {
 	private static final DecimalFormat FORMAT = new DecimalFormat("#0.00");
 
 	private static final Pattern TRIM_PATH = Pattern.compile(".*[/\\\\]");
-	private static final Pattern NEWLINE = Pattern.compile("\\r|\\r?\\n");
 	private static final long MILLI = 1000000L;
 	private static final String ROOT_ID = "main";
-
+	
 	private final WebEngine engine;
-	
-	private final Map<String, CodeEditor>    codeEditors;
+	private final ErrorLogger errorLogger;
+	private final Map<String, CodeEditor> codeEditors;
 	private final Map<String, LexiconViewer> lexiconViewers;
-	
+
 	private final LogViewer logViewer;
 	private final FileHandler fileHandler;
-	
+
 	private ProjectFile projectRoot;
 
 	public PanelController() {
+		errorLogger = new ErrorLogger();
 		codeEditors = new HashMap<>();
 		lexiconViewers = new HashMap<>();
 
@@ -84,12 +84,29 @@ public final class PanelController extends StackPane {
 		projectRoot = new ProjectFile(ROOT_ID, new File("./"));
 	}
 
+	private static String getResourceURL() {
+		URL resource = PanelController.class
+				.getClassLoader()
+				.getResource("panelview.html");
+		return (resource != null) ? resource.toExternalForm() : null;
+	}
+
+	private CodeEditor addCodeEditor(String id) {
+		if (codeEditors.containsKey(id)) {
+			return codeEditors.get(id);
+		} else {
+			CodeEditor value = new CodeEditor(id, engine);
+			codeEditors.put(id, value);
+			return value;
+		}
+	}
+
 	public void saveProjectAs(File file) {
-			CodeEditor editor = codeEditors.get(ROOT_ID);
-			// TODO: add hooks for saving other files
-			// TODO: how to change relative paths of the files?
-			// Paths generated programmatically based on references in the script?
-			editor.saveEditor(file);
+		CodeEditor editor = codeEditors.get(ROOT_ID);
+		// TODO: add hooks for saving other files
+		// TODO: how to change relative paths of the files?
+		// Paths generated programmatically based on references in the script?
+		editor.saveEditor(file);
 	}
 
 	public void newProject(File file) {
@@ -108,59 +125,19 @@ public final class PanelController extends StackPane {
 			compileScript();
 			// TODO: add hooks for opening other files
 		} catch (IOException e) {
-			logViewer.error(file.toString(), -1, "",e.toString());
-		}
-	}
-
-	public void addThemeListenerTo(ObservableValue<Number> property) {
-		property.addListener((observable, oldValue, newValue) -> {
-			String name = ThemeManager.get((int) newValue);
-			String type = ThemeManager.getType(name);
-			String normalized = ThemeManager.getNormalized((int) newValue);
-			setTheme(type, normalized);
-		});
-	}
-
-	public void addFontSizeListenerTo(ObservableValue<Integer> property) {
-		property.addListener((observable, oldValue, newValue) ->  {
-			for (CodeEditor editor : codeEditors.values()) {
-						editor.setFontSize(newValue);
-					}
-				}
-		);
-	}
-
-	public void addHiddenCharListenerTo(ObservableValue<Boolean> property) {
-		property.addListener((observable, oldValue, newValue) -> {
-			for (CodeEditor editor : codeEditors.values()) {
-				editor.setShowHiddenCharacters(newValue);
-			}
-		});
-	}
-
-	public void saveProject() {
-		for (Map.Entry<String, CodeEditor> entry : codeEditors.entrySet()) {
-			String pathname = entry.getKey();
-			try {
-				File file = new File(pathname);
-				CodeEditor editor = entry.getValue();
-				String code = editor.getCodeAndSnapshot();
-				FileUtils.write(file, code);
-			} catch (IOException e) {
-				logViewer.error(pathname, -1, "", e.toString());
-			}
+			logViewer.error(file.toString(), -1, "", e.toString());
 		}
 	}
 
 	public void compileScript() {
 		File file = projectRoot.getFile();
-		
+
+		cleanErrorLogger();
+
 		String editorKey = ROOT_ID;
 		CodeEditor editor = codeEditors.get(editorKey);
 		String code = editor.getCodeAndSnapshot();
 		FileHandler handler = new DiskFileHandler("UTF-8");
-
-		ErrorLogger errorLogger = cleanErrorLogger();
 		String fileName = file.getAbsolutePath();
 		try {
 			logViewer.info(editorKey, "processing");
@@ -182,13 +159,18 @@ public final class PanelController extends StackPane {
 		}
 	}
 
-	@NotNull
-	private ErrorLogger cleanErrorLogger() {
-		ErrorLogger errorLogger = new ErrorLogger();
+	private void cleanErrorLogger() {
 		errorLogger.clear();
 		logViewer.clearLog();
 		clearErrorMarkers();
-		return errorLogger;
+	}
+
+	private void logErrors(Iterable<ErrorLogger.Error> errors) {
+		logViewer.clearLog();
+		for (ErrorLogger.Error error : errors) {
+			logViewer.error(error);
+			Annotation.error(error);
+		}
 	}
 
 	@NotNull
@@ -201,13 +183,64 @@ public final class PanelController extends StackPane {
 		return sb.toString();
 	}
 
+	private void clearErrorMarkers() {
+		for (CodeEditor editor : codeEditors.values()) {
+			editor.clearErrorMarkers();
+		}
+	}
+
+	public void addThemeListenerTo(ObservableValue<Number> property) {
+		property.addListener((observable, oldValue, newValue) -> {
+			String name = ThemeManager.get((int) newValue);
+			String type = ThemeManager.getType(name);
+			String normalized = ThemeManager.getNormalized((int) newValue);
+			setTheme(type, normalized);
+		});
+	}
+
+	private void setTheme(String type, String name) {
+		engine.executeScript("setTheme(\'" + type + "\',\'" + name + "\')");
+	}
+
+	public void addFontSizeListenerTo(ObservableValue<Integer> property) {
+		property.addListener((observable, oldValue, newValue) -> {
+					for (CodeEditor editor : codeEditors.values()) {
+						editor.setFontSize(newValue);
+					}
+				}
+		);
+	}
+
+	public void addHiddenCharListenerTo(ObservableValue<Boolean> property) {
+		property.addListener((observable, oldValue, newValue) -> {
+			for (CodeEditor editor : codeEditors.values()) {
+				editor.setShowHiddenCharacters(newValue);
+			}
+		});
+	}
+
+	public void saveProject() {
+		for (Map.Entry<String, CodeEditor> entry : codeEditors.entrySet()) {
+			String pathname = entry.getKey();
+			try {
+				// TODO: save all files
+				File file = new File(pathname);
+				CodeEditor editor = entry.getValue();
+				String code = editor.getCodeAndSnapshot();
+				FileUtils.write(file, code);
+			} catch (IOException e) {
+				logViewer.error(pathname, -1, "", e.toString());
+			}
+		}
+	}
+
 	public void runScript() {
 		File file = projectRoot.getFile();
-		
+
+		cleanErrorLogger();
+
 		CodeEditor editor = codeEditors.get(ROOT_ID);
 		String code = editor.getCodeAndSnapshot();
-
-		ErrorLogger errorLogger = cleanErrorLogger();
 		String fileName = file.getAbsolutePath();
 		try {
 			logViewer.info(fileName, "processing");
@@ -251,7 +284,7 @@ public final class PanelController extends StackPane {
 	@NotNull
 	private static LexiconData buildLexicons(SoundChangeScript script) {
 		LexiconData lexiconGroups = new LexiconData();
-		for (Runnable runnable :  script.getCommands()) {
+		for (Runnable runnable : script.getCommands()) {
 			if (runnable instanceof AbstractLexiconIoCommand) {
 				AbstractLexiconIoCommand ioCommand = (AbstractLexiconIoCommand) runnable;
 				String filePath = ioCommand.getPath();
@@ -271,16 +304,6 @@ public final class PanelController extends StackPane {
 		return lexiconGroups;
 	}
 
-	private CodeEditor addCodeEditor(String id) {
-		if (codeEditors.containsKey(id)) {
-			return codeEditors.get(id);
-		} else {
-			CodeEditor value = new CodeEditor(id, engine);
-			codeEditors.put(id, value);
-			return value;
-		}
-	}
-
 	private LexiconViewer addLexiconView(String id) {
 		if (lexiconViewers.containsKey(id)) {
 			return lexiconViewers.get(id);
@@ -291,36 +314,21 @@ public final class PanelController extends StackPane {
 		}
 	}
 
-	private void clearErrorMarkers() {
-		for (CodeEditor editor : codeEditors.values()) {
-			editor.clearErrorMarkers();
-		}
-	}
-
-	private void logErrors(Iterable<ErrorLogger.Error> errors) {
-		logViewer.clearLog();
-		for (ErrorLogger.Error error : errors) {
-			logViewer.error(error);
-			Annotation.error(error);
-		}
-	}
-
-	private static String getResourceURL() {
-		URL resource = PanelController.class
-				.getClassLoader()
-				.getResource("panelview.html");
-		return (resource != null) ? resource.toExternalForm() : null;
-	}
-
-	private void setTheme(String type, String name) {
-		engine.executeScript("setTheme(\'"+type+"\',\'"+name+"\')");
-	}
-
 	@Override
 	public String toString() {
 		return "PanelController{" +
 				", codeEditors=" + codeEditors +
 				", lexiconViewers=" + lexiconViewers +
 				'}';
+	}
+
+	private static class ScriptResponse {
+		private final long time;
+		private final SoundChangeScript script;
+
+		private ScriptResponse(long time, SoundChangeScript script) {
+			this.time = time;
+			this.script = script;
+		}
 	}
 }

@@ -22,13 +22,14 @@ import org.didelphis.soundchange.command.io.ScriptImportCommand;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 /**
  * Samantha Fiona Morrigan McCabe
  * Created: 4/22/2016
  */
-public class ProjectFile {
+public class ProjectFile implements Iterable<ProjectFile> {
 
 	private final String id;
 	private final File file;
@@ -56,11 +57,11 @@ public class ProjectFile {
 		return !children.isEmpty();
 	}
 
-	public void collectIds(Collection<ProjectFile> collection) {
+	public void collect(Collection<ProjectFile> collection) {
 		for (ProjectFile child : children) {
 			collection.add(child);
 			if (child.hasChildren()) {
-				child.collectIds(collection);
+				child.collect(collection);
 			}
 		}
 	}
@@ -70,7 +71,7 @@ public class ProjectFile {
 	}
 	
 	public void populate(SoundChangeScript script) {
-		String parent = file.getParent();
+		String parent = file.getParent(); 
 		for (Runnable runnable : script.getCommands()) {
 			if (runnable instanceof ScriptImportCommand) {
 				addChild(parent, (AbstractIoCommand) runnable);
@@ -81,10 +82,18 @@ public class ProjectFile {
 		}
 	}
 
+	@Override
+	public Iterator<ProjectFile> iterator() {
+		Collection<ProjectFile> files = new ArrayList<>();
+		collect(files);
+		return files.iterator();
+	}
+
 	private void addChild(String parent, AbstractIoCommand runnable) {
 		String path = runnable.getPath();
-		File file = new File(parent + "/" + path);
+		File file = new File(parent + '/' + path);
 		String id = file.getName();
 		children.add(new ProjectFile(id, file));
 	}
 }
+

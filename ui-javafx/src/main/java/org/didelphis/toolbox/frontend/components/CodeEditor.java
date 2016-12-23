@@ -32,7 +32,7 @@ import java.util.List;
  *
  * Component for managing Ace editors
  */
-public class CodeEditor extends Component {
+public class CodeEditor extends AbstractComponent {
 
 	public CodeEditor(String id, WebEngine engine) {
 		super(id, engine);

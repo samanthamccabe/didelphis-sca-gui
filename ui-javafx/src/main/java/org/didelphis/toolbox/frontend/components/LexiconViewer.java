@@ -23,7 +23,7 @@ import java.util.List;
 /**
  * Created by samantha on 11/13/16.
  */
-public class LexiconViewer extends Component {
+public class LexiconViewer extends AbstractComponent {
 
 	public LexiconViewer(String id, WebEngine engine) {
 		super(id, engine);
