@@ -23,7 +23,7 @@ import org.didelphis.soundchange.ErrorLogger;
  * Created: 11/15/2016
  */
 public class LogViewer extends AbstractComponent {
-	
+
 	public LogViewer(String id, WebEngine engine) {
 		super(id, engine);
 	}
@@ -32,14 +32,15 @@ public class LogViewer extends AbstractComponent {
 	public void generate() {
 		// TODO:
 	}
-	
+
 	public void setTheme(String theme) {
-		execute("errorLogger.setTheme(\"ace/theme/" + theme + "\")");
+		execute(getId() + ".setTheme(\"ace/theme/" + theme + "\")");
 	}
 
 	public void error(ErrorLogger.Error error) {
 		log("ERROR", error.getScript(), error.getLine(), error.getData(), error.getMessage());
 	}
+
 	public void error(String script, int line, String data, String message) {
 		log("ERROR", script, line, data, message);
 	}
@@ -53,19 +54,11 @@ public class LogViewer extends AbstractComponent {
 		stringbuilder.append('\n');
 		String input = stringbuilder.toString();
 		String escaped = StringEscapeUtils.escapeEcmaScript(input);
-		execute("errorLogger.append(\"" + escaped + "\");");
+		execute(getId() + ".append(\"" + escaped + "\");");
 	}
 
-	private void log(String code, String script, int line, String data, String message) {
-		String n = String.valueOf(line);
-		String escaped = StringEscapeUtils.escapeEcmaScript(
-				build("[", code, "] line: ", n, " ", script, " | ",message, "\n", data, "\n")
-		);
-		execute("errorLogger.append(\"" + escaped + "\");");
-	}
-
-	public void clearLog() {
-		execute("errorLogger.clear();");
+	public void clear() {
+		execute(getId() + ".clear();");
 	}
 
 	private static String build(String... strings) {
@@ -74,5 +67,13 @@ public class LogViewer extends AbstractComponent {
 			sb.append(string);
 		}
 		return sb.toString();
+	}
+
+	private void log(String code, String script, int line, String data, String message) {
+		String n = String.valueOf(line);
+		String escaped = StringEscapeUtils.escapeEcmaScript(
+				build("[", code, "] line: ", n, " ", script, " | ", message, "\n", data, "\n")
+		);
+		execute(getId() + ".append(\"" + escaped + "\");");
 	}
 }

@@ -49,7 +49,6 @@ public final class PanelController extends StackPane {
 
 	private static final Pattern TRIM_PATH = Pattern.compile(".*[/\\\\]");
 	private static final long MILLI = 1000000L;
-	private static final String ROOT_ID = "main";
 	
 	private final WebEngine engine;
 	private final ErrorLogger errorLogger;
@@ -68,23 +67,29 @@ public final class PanelController extends StackPane {
 
 		WebView webview = new WebView();
 		engine = webview.getEngine();
-		engine.load(getResourceURL());
+		engine.load(generateResourceURL());
 		getChildren().add(webview);
 
 		// Controllers for pane contents
 		logViewer = new LogViewer("logViewer", engine);
 
-		// Populate initial view
-		addCodeEditor(ROOT_ID);
-
 		engine.setOnAlert(System.out::println);
-		engine.setOnError(System.err::println);
+		engine.setOnError(event -> {
+			StackTraceElement[] stackTrace = event.getException().getStackTrace();
+			StringBuilder sb = new StringBuilder();
+			for (StackTraceElement element : stackTrace) {
+				sb.append('\n').append(element);
+			}
+			System.err.println(event + " " + sb);
+		});
 		fileHandler = new DiskFileHandler("UTF-8");
+		projectRoot = new ProjectFile(new File("./"));
 
-		projectRoot = new ProjectFile(ROOT_ID, new File("./"));
+		// Populate initial view
+		addCodeEditor(projectRoot.getId());
 	}
 
-	private static String getResourceURL() {
+	private static String generateResourceURL() {
 		URL resource = PanelController.class
 				.getClassLoader()
 				.getResource("panelview.html");
@@ -102,7 +107,7 @@ public final class PanelController extends StackPane {
 	}
 
 	public void saveProjectAs(File file) {
-		CodeEditor editor = codeEditors.get(ROOT_ID);
+		CodeEditor editor = codeEditors.get(projectRoot.getId());
 		// TODO: add hooks for saving other files
 		// TODO: how to change relative paths of the files?
 		// Paths generated programmatically based on references in the script?
@@ -110,18 +115,22 @@ public final class PanelController extends StackPane {
 	}
 
 	public void newProject(File file) {
-		projectRoot = new ProjectFile(ROOT_ID, file);
+		projectRoot = new ProjectFile(file);
 		// TODO: clear state
-		CodeEditor editor = codeEditors.get(ROOT_ID);
+		CodeEditor editor = codeEditors.get(projectRoot.getId());
 		editor.saveEditor(file);
 	}
 
 	public void openProject(File file) {
-		String id = file.getName();
-		projectRoot = new ProjectFile(id, file);
+		clearView();
+		projectRoot = new ProjectFile(file);
 		try {
 			String data = FileUtils.readFileToString(file);
-			codeEditors.get(ROOT_ID).setCode(data);
+			String id = projectRoot.getId();
+			CodeEditor codeEditor = new CodeEditor(id, engine);
+			codeEditor.setCode(data);
+			codeEditor.generate();
+			codeEditors.put(id, codeEditor);
 			compileScript();
 			// TODO: add hooks for opening other files
 		} catch (IOException e) {
@@ -129,18 +138,21 @@ public final class PanelController extends StackPane {
 		}
 	}
 
+	private void clearView() {
+		codeEditors.clear();
+		lexiconViewers.clear();
+		engine.executeScript("controller.clear();");
+	}
+
 	public void compileScript() {
 		File file = projectRoot.getFile();
-
 		cleanErrorLogger();
-
-		String editorKey = ROOT_ID;
-		CodeEditor editor = codeEditors.get(editorKey);
-		String code = editor.getCodeAndSnapshot();
+		CodeEditor editor = codeEditors.get(projectRoot.getId());
+		String code = editor.getCode();
 		FileHandler handler = new DiskFileHandler("UTF-8");
 		String fileName = file.getAbsolutePath();
 		try {
-			logViewer.info(editorKey, "processing");
+			logViewer.info(projectRoot.getId(), "processing");
 
 			long start = System.nanoTime();
 			StandardScript script = new StandardScript(fileName, code, handler, errorLogger);
@@ -161,15 +173,16 @@ public final class PanelController extends StackPane {
 
 	private void cleanErrorLogger() {
 		errorLogger.clear();
-		logViewer.clearLog();
+		logViewer.clear();
 		clearErrorMarkers();
 	}
 
 	private void logErrors(Iterable<ErrorLogger.Error> errors) {
-		logViewer.clearLog();
+		logViewer.clear();
 		for (ErrorLogger.Error error : errors) {
 			logViewer.error(error);
-			Annotation.error(error);
+			String script = error.getScript();
+			codeEditors.get(script).addAnnotation(Annotation.error(error));
 		}
 	}
 
@@ -226,7 +239,7 @@ public final class PanelController extends StackPane {
 				// TODO: save all files
 				File file = new File(pathname);
 				CodeEditor editor = entry.getValue();
-				String code = editor.getCodeAndSnapshot();
+				String code = editor.getCode();
 				FileUtils.write(file, code);
 			} catch (IOException e) {
 				logViewer.error(pathname, -1, "", e.toString());
@@ -239,8 +252,8 @@ public final class PanelController extends StackPane {
 
 		cleanErrorLogger();
 
-		CodeEditor editor = codeEditors.get(ROOT_ID);
-		String code = editor.getCodeAndSnapshot();
+		CodeEditor editor = codeEditors.get(projectRoot.getId());
+		String code = editor.getCode();
 		String fileName = file.getAbsolutePath();
 		try {
 			logViewer.info(fileName, "processing");
@@ -265,7 +278,7 @@ public final class PanelController extends StackPane {
 				List<String> subKeys = lexiconData.getSubKeys(key);
 				List<List<String>> table = lexiconData.getAsTable(key);
 
-				String newKey = editor.getId() + "-" + key;
+				String newKey = editor.getId() + '-' + key;
 				LexiconViewer viewer = addLexiconView(newKey);
 				viewer.generate();
 				viewer.setContent(subKeys, table);
@@ -273,7 +286,7 @@ public final class PanelController extends StackPane {
 		} catch (Exception e) {
 			StringBuilder sb = new StringBuilder(e.toString());
 			for (StackTraceElement element : e.getStackTrace()) {
-				sb.append("\n");
+				sb.append('\n');
 				sb.append(element);
 			}
 			logViewer.error(fileName, -1,

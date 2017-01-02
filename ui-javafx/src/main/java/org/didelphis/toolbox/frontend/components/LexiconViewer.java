@@ -35,12 +35,12 @@ public class LexiconViewer extends AbstractComponent {
 	}
 
 	public void setContent(List<String> subKeys, List<List<String>> table) {
-		execute("lexiconViewers[\"" + getId() + "\"].createTable", subKeys);
+		execute("controller.lexiconViewers.get(\"" + getId() + "\").createTable", subKeys);
 		int i = 1;
 		List<Object> blob = new ArrayList<>();
 		for (List<String> list : table) {
-			if (i % 50 == 0) {
-				execute("lexiconViewers[\"" + getId() + "\"].addData", blob);
+			if ((i % 50) == 0) {
+				execute("controller.lexiconViewers.get(\"" + getId() + "\").addData", blob);
 				blob.clear();
 			}
 			list.add(0, String.valueOf(i));
@@ -48,12 +48,12 @@ public class LexiconViewer extends AbstractComponent {
 			i++;
 		}
 		if (!blob.isEmpty()) {
-			execute("lexiconViewers[\"" + getId() + "\"].addData", blob);
+			execute("controller.lexiconViewers.get(\"" + getId() + "\").addData", blob);
 		}
-		execute("lexiconViewers[\"" + getId() + "\"].initialize()");
+		execute("controller.lexiconViewers(\"" + getId() + "\").initialize()");
 	}
 
 	public void clear() {
-		execute("lexiconViewers[\"" + getId() + "\"].clear()");
+		execute("controller.lexiconViewers(\"" + getId() + "\").clear()");
 	}
 }

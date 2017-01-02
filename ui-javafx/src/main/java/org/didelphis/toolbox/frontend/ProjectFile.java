@@ -35,8 +35,8 @@ public class ProjectFile implements Iterable<ProjectFile> {
 	private final File file;
 	private final List<ProjectFile> children;
 
-	public ProjectFile(String id, File file) {
-		this.id = id;
+	public ProjectFile(File file) {
+		this.id = file.getAbsolutePath();
 		this.file = file;
 		children = new ArrayList<>();
 	}
@@ -91,9 +91,8 @@ public class ProjectFile implements Iterable<ProjectFile> {
 
 	private void addChild(String parent, AbstractIoCommand runnable) {
 		String path = runnable.getPath();
-		File file = new File(parent + '/' + path);
-		String id = file.getName();
-		children.add(new ProjectFile(id, file));
+		File f = new File(parent + '/' + path);
+		children.add(new ProjectFile(f));
 	}
 }
 
