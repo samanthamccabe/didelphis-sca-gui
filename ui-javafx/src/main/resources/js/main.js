@@ -37,8 +37,10 @@ let config = {
 	},
 	content: [{
 		type: "row",
+		id: "mainRow",
 		content: [{
 			type: "column",
+			id: "mainColumn",
 			content: [{
 				type: "stack",
 				id: "editorStack",
@@ -60,6 +62,12 @@ let config = {
 				}
 			}]
 		}]
+		// },{
+		// 	type: "stack",
+		// 	id: "lexiconStack",
+		// 	width: 0,
+		// 	content: []
+		// }]
 	}]
 };
 

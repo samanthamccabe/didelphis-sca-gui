@@ -26,11 +26,14 @@ class PanelController {
 				}
 			});
 			$(document).ready(() => {
-				codeEditors.set(state.id, new CodeEditor(state.id, container));
+				let codeEditor = new CodeEditor(state.id, container);
+				if (state.content) {
+					codeEditor.setValue(state.content);
+				}
+				codeEditors.set(state.id, codeEditor);
 			});
 		});
-
-		layout.registerComponent("Log View", function (container, state) {
+		layout.registerComponent("Log View",      function (container, state) {
 			container.getElement().append($("<div/>", {
 				id: state.id
 			}).addClass("codeEditor"));
@@ -45,11 +48,12 @@ class PanelController {
 				logViewer = new LogViewer(state.id, container);
 			});
 		});
-
-		layout.registerComponent("Lexicon View", function (container, state) {
-			container.getElement().append($("<div/>", {
+		layout.registerComponent("Lexicon View",  function (container, state) {
+			container.getElement()
+			.append($("<div/>", {
 				id: state.id
-			}).addClass("lexiconContainer"));
+			})
+			.addClass("lexiconContainer"));
 			container.on("destroy", () => {
 				lexiconViewers.delete(state.id);
 			});
@@ -78,12 +82,43 @@ class PanelController {
 		this.lexiconViewers.forEach((viewer) => { viewer.close(); });
 	}
 
-	addEditor(id) {
+	addEditor(id, content) {
 		if (!this.codeEditors.has(id)) {
-			// console.log(this.layout.root);
-			this.layout.root.contentItems[0].addChild({
-				
-			});
+			let stacks = this.layout.root.getItemsById("editorStack");
+			if (stacks.length) {
+				stacks[0].addChild({
+					type: "component",
+					componentName: "Script Editor",
+					title: "Editor - " + id,
+					componentState: {
+						id: id,
+						content: content
+					}
+				});
+			} else {
+				let columns = this.layout.root.getItemsById("mainColumn");
+				if (columns.length) {
+					columns[0].addChild({
+						type: "stack",
+						id: "editorStack"
+					}, 0);
+				} else {
+					let rows = this.layout.root.getItemsById("mainRow");
+					if (rows.length) {
+						rows[0].addChild({
+							type: "column",
+							id: "mainColumn"
+						},0);
+					} else {
+						this.layout.root.addChild({
+							type: "row",
+							id: "mainRow"
+						},0);
+					}
+				}
+				// Try again
+				this.addEditor(id);
+			}
 		}
 	}
 
@@ -92,10 +127,9 @@ class PanelController {
 			this.layout.root.contentItems[0].addChild({
 				type: "component",
 				componentName: "Lexicon View",
-				title: "Lexicon View - ",
+				title: "Lexicon View -	 ",
 				componentState: {
-					id: id,
-					parent: this.layout.root.contentItems[0]
+					id: id
 				}
 			});
 		}

@@ -46,7 +46,7 @@ class CodeEditor {
 					for (let i = 0; i < annotations.length; i++) {
 						this.setMarker(annotations[i]);
 					}
-					editor.session.annotations(annotations);
+					editor.session.setAnnotations(annotations);
 				}
 			});
 			return editor;
