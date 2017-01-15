@@ -38,11 +38,6 @@ public class CodeEditor extends AbstractComponent {
 		super(id, engine);
 	}
 
-	@Override
-	public void generate() {
-		// TODO: ??
-	}
-
 	public void setCode(String newCode) {
 		String escaped = StringEscapeUtils.escapeEcmaScript(newCode);
 		execute("controller.codeEditors.get(\"" + getId() + "\").setValue(\"" + escaped + "\");");

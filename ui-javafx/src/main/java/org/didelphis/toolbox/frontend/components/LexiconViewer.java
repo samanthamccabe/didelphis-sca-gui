@@ -28,12 +28,7 @@ public class LexiconViewer extends AbstractComponent {
 	public LexiconViewer(String id, WebEngine engine) {
 		super(id, engine);
 	}
-
-	@Override
-	public void generate() {
-		execute("addViewer", getId());
-	}
-
+	
 	public void setContent(List<String> subKeys, List<List<String>> table) {
 		execute("controller.lexiconViewers.get(\"" + getId() + "\").createTable", subKeys);
 		int i = 1;

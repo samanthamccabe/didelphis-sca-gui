@@ -6,46 +6,33 @@ class PanelController {
 	constructor(config) {
 		let codeEditors    = new Map();
 		let lexiconViewers = new Map();	
-		let logViewer      = {};
 
 		let layout = new GoldenLayout(config);
 
 		layout.registerComponent("Script Editor", function (container, state) {
-			container.getElement().append($("<div/>", {
-				id: state.id
-			}).addClass("codeEditor"));
+			let codeEditor = new CodeEditor(state.id, container);
 			container.on("destroy", () => {
 				codeEditors.delete(state.id);
 			});
 			container.on("resize", () => {
 				let editor = codeEditors.get(state.id);
 				if (editor) {
-					$(document).ready(() => {
-						editor.resize();
-					});
+					editor.resize();
 				}
 			});
-			$(document).ready(() => {
-				let codeEditor = new CodeEditor(state.id, container);
-				if (state.content) {
-					codeEditor.setValue(state.content);
-				}
-				codeEditors.set(state.id, codeEditor);
-			});
+			if (state.content) {
+				codeEditor.setValue(state.content);
+			}
+			codeEditors.set(state.id, codeEditor);
 		});
 		layout.registerComponent("Log View",      function (container, state) {
-			container.getElement().append($("<div/>", {
-				id: state.id
-			}).addClass("codeEditor"));
+			this.logViewer = new LogViewer(state.id, container);
 			container.on("resize", () => {
-				if (logViewer) {
+				if (this.logViewer) {
 					$(document).ready(() => {
-						logViewer.resize();
+						this.logViewer.resize();
 					});
 				}
-			});
-			$(document).ready(() => {
-				logViewer = new LogViewer(state.id, container);
 			});
 		});
 		layout.registerComponent("Lexicon View",  function (container, state) {
@@ -73,7 +60,6 @@ class PanelController {
 		// Add as properties
 		this.codeEditors = codeEditors;
 		this.lexiconViewers = lexiconViewers;
-		this.logViewer = logViewer;
 		this.layout = layout;
 	}
 

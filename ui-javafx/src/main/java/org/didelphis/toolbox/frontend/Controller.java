@@ -42,11 +42,12 @@ public final class Controller implements Initializable {
 	@FXML private CheckBox hiddenCharBox;
 	private File currentFolder;
 
-	public Controller(){}
+	public Controller(){
+		currentFolder = new File("./");
+	}
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		currentFolder = new File("./");
 
 		themePicker.setValue("Chrome");
 		themePicker.setItems(FXCollections.observableArrayList(ThemeManager.listThemes()));

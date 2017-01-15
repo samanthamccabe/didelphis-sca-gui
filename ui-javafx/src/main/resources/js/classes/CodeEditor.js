@@ -10,17 +10,19 @@ class CodeEditor {
 		this.id = id;
 		this.container = container;
 
-		this.editor = (() => {
-			let editor = ace.edit(id);
-			editor.session.setMode("ace/mode/didelphissca");
-			editor.renderer.setOption("fontFamily",
-				[
-					"DejaVu Sans Mono",
-					"Consolas",
-					"Source Code Pro",
-					"monospace"
-				]);
-			editor.on("change", (delta) => {
+		let element = container.getElement().append($("<div/>", {
+			id: id
+		}).addClass("codeEditor"))[0];
+
+		this.editor = ace.edit(element);
+		this.editor.session.setMode("ace/mode/didelphissca");
+		this.editor.renderer.setOption("fontFamily", [
+			"DejaVu Sans Mono",
+			"Consolas",
+			"Source Code Pro",
+			"monospace"
+		]);
+		this.editor.on("change", (delta) => {
 				if (editor) {
 					let annotations = editor.session.getAnnotations();
 					let deltaRange = CodeEditor.range(delta.start.row, delta.end.row);
@@ -49,8 +51,6 @@ class CodeEditor {
 					editor.session.setAnnotations(annotations);
 				}
 			});
-			return editor;
-		})();
 	}
 
 	close() {

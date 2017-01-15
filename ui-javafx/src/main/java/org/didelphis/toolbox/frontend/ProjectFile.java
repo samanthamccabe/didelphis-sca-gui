@@ -36,8 +36,8 @@ public class ProjectFile implements Iterable<ProjectFile> {
 	private final List<ProjectFile> children;
 
 	public ProjectFile(File file) {
-		this.id = file.getAbsolutePath();
 		this.file = file;
+		id = file.getName();
 		children = new ArrayList<>();
 	}
 
@@ -73,10 +73,7 @@ public class ProjectFile implements Iterable<ProjectFile> {
 	public void populate(SoundChangeScript script) {
 		String parent = file.getParent(); 
 		for (Runnable runnable : script.getCommands()) {
-			if (runnable instanceof ScriptImportCommand) {
-				addChild(parent, (AbstractIoCommand) runnable);
-			} else
-			if (runnable instanceof ScriptExecuteCommand) {
+			if (runnable instanceof AbstractIoCommand) {
 				addChild(parent, (AbstractIoCommand) runnable);
 			}
 		}

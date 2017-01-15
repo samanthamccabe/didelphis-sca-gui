@@ -19,6 +19,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.didelphis.io.DiskFileHandler;
 import org.didelphis.io.FileHandler;
 import org.didelphis.soundchange.ErrorLogger;
@@ -128,8 +129,10 @@ public final class PanelController extends StackPane {
 			String data = FileUtils.readFileToString(file);
 			String id = projectRoot.getId();
 			CodeEditor codeEditor = new CodeEditor(id, engine);
-			codeEditor.setCode(data);
-			codeEditor.generate();
+
+			String script = StringEscapeUtils.escapeEcmaScript(data);
+			engine.executeScript("controller.addEditor(\"" + id + "\",\""+script+"\")");
+//			codeEditor.setCode(data);
 			codeEditors.put(id, codeEditor);
 			compileScript();
 			// TODO: add hooks for opening other files
@@ -280,7 +283,6 @@ public final class PanelController extends StackPane {
 
 				String newKey = editor.getId() + '-' + key;
 				LexiconViewer viewer = addLexiconView(newKey);
-				viewer.generate();
 				viewer.setContent(subKeys, table);
 			}
 		} catch (Exception e) {
@@ -333,15 +335,5 @@ public final class PanelController extends StackPane {
 				", codeEditors=" + codeEditors +
 				", lexiconViewers=" + lexiconViewers +
 				'}';
-	}
-
-	private static class ScriptResponse {
-		private final long time;
-		private final SoundChangeScript script;
-
-		private ScriptResponse(long time, SoundChangeScript script) {
-			this.time = time;
-			this.script = script;
-		}
 	}
 }

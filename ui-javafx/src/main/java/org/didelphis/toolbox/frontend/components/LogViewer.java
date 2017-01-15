@@ -28,11 +28,6 @@ public class LogViewer extends AbstractComponent {
 		super(id, engine);
 	}
 
-	@Override
-	public void generate() {
-		// TODO:
-	}
-
 	public void setTheme(String theme) {
 		execute(getId() + ".setTheme(\"ace/theme/" + theme + "\")");
 	}
@@ -58,7 +53,7 @@ public class LogViewer extends AbstractComponent {
 	}
 
 	public void clear() {
-		execute(getId() + ".clear();");
+		execute("controller."+getId() + ".clear();");
 	}
 
 	private static String build(String... strings) {

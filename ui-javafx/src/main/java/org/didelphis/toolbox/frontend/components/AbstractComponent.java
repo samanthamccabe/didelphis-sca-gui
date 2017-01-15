@@ -34,14 +34,11 @@ public abstract class AbstractComponent {
 	 *      <code>PanelController</code>
 	 * @param webEngine the WebView engine in which this component is rendered
 	 */
-	public AbstractComponent(String id, WebEngine webEngine) {
+	protected AbstractComponent(String id, WebEngine webEngine) {
 		this.id = id;
 		this.webEngine = webEngine;
 		mapper = new ObjectMapper();
 	}
-
-	/** Adds the component to the web UI */
-	public abstract void generate();
 	
 	public String getId() {
 		return id;
