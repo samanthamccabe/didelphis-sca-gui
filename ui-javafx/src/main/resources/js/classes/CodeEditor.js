@@ -23,8 +23,8 @@ class CodeEditor {
 			"monospace"
 		]);
 		this.editor.on("change", (delta) => {
-				if (editor) {
-					let annotations = editor.session.getAnnotations();
+				if (this.editor) {
+					let annotations = this.editor.session.getAnnotations();
 					let deltaRange = CodeEditor.range(delta.start.row, delta.end.row);
 					for (let i = 0; i < annotations.length;) {
 						let annotation = annotations[i];
@@ -35,7 +35,7 @@ class CodeEditor {
 							i++;
 						}
 					}
-					let session = editor.session;
+					let session = this.editor.session;
 					let markers = session.getMarkers(false);
 					for (let key in markers) {
 						if (markers.hasOwnProperty(key)) {
@@ -48,7 +48,7 @@ class CodeEditor {
 					for (let i = 0; i < annotations.length; i++) {
 						this.setMarker(annotations[i]);
 					}
-					editor.session.setAnnotations(annotations);
+					this.editor.session.setAnnotations(annotations);
 				}
 			});
 	}

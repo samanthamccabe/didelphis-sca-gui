@@ -14,9 +14,13 @@
 
 package org.didelphis.toolbox.frontend.components;
 
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.concurrent.Worker;
+import javafx.event.EventHandler;
 import javafx.scene.layout.StackPane;
 import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebEvent;
 import javafx.scene.web.WebView;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -46,8 +50,10 @@ import java.util.regex.Pattern;
  * Created: 10/29/2016
  */
 public final class PanelController extends StackPane {
-	private static final DecimalFormat FORMAT = new DecimalFormat("#0.00");
 
+	public  static final String ACCESS_PATH = "controller";
+	
+	private static final DecimalFormat FORMAT = new DecimalFormat("#0.00");
 	private static final Pattern TRIM_PATH = Pattern.compile(".*[/\\\\]");
 	private static final long MILLI = 1000000L;
 	
@@ -84,12 +90,19 @@ public final class PanelController extends StackPane {
 			System.err.println(event + " " + sb);
 		});
 		fileHandler = new DiskFileHandler("UTF-8");
-		projectRoot = new ProjectFile(new File("./"));
+		projectRoot = new ProjectFile(new File("."));
 
-		// Populate initial view
-		addCodeEditor(projectRoot.getId());
+		// Populate initial view when ready
+		engine.getLoadWorker().stateProperty().addListener(
+				(observable, oldValue, newValue) -> {
+					if (newValue == Worker.State.SUCCEEDED) {
+						addCodeEditor(projectRoot.getId(), "% New Script");
+					}
+				});
+		
+		
 	}
-
+	
 	private static String generateResourceURL() {
 		URL resource = PanelController.class
 				.getClassLoader()
@@ -97,12 +110,13 @@ public final class PanelController extends StackPane {
 		return (resource != null) ? resource.toExternalForm() : null;
 	}
 
-	private CodeEditor addCodeEditor(String id) {
+	private CodeEditor addCodeEditor(String id, String content) {
 		if (codeEditors.containsKey(id)) {
 			return codeEditors.get(id);
 		} else {
 			CodeEditor value = new CodeEditor(id, engine);
 			codeEditors.put(id, value);
+			executeCommand("controller.addEditor",id, content);
 			return value;
 		}
 	}
@@ -146,7 +160,7 @@ public final class PanelController extends StackPane {
 		lexiconViewers.clear();
 		engine.executeScript("controller.clear();");
 	}
-
+	
 	public void compileScript() {
 		File file = projectRoot.getFile();
 		cleanErrorLogger();
@@ -327,6 +341,25 @@ public final class PanelController extends StackPane {
 			lexiconViewers.put(id, value);
 			return value;
 		}
+	}
+	
+	private Object executeCommand(String commandPath, Object... params) {
+		StringBuilder sb = new StringBuilder(commandPath);
+		sb.append("(");
+		for (Object param : params) {
+			if (param instanceof String) {
+				sb.append("\"");
+				sb.append(StringEscapeUtils.escapeEcmaScript((String) param));
+				sb.append("\"");
+			} else {
+				sb.append(param);
+			}
+			sb.append(",");
+		}
+		sb.deleteCharAt(sb.length()-1);
+		sb.append(")");
+		
+		return engine.executeScript(sb.toString());
 	}
 
 	@Override

@@ -6,7 +6,8 @@ class PanelController {
 	constructor(config) {
 		let codeEditors    = new Map();
 		let lexiconViewers = new Map();	
-
+		let logViewers     = new Map();
+		
 		let layout = new GoldenLayout(config);
 
 		layout.registerComponent("Script Editor", function (container, state) {
@@ -26,12 +27,11 @@ class PanelController {
 			codeEditors.set(state.id, codeEditor);
 		});
 		layout.registerComponent("Log View",      function (container, state) {
-			this.logViewer = new LogViewer(state.id, container);
+			logViewers.set(state.id, new LogViewer(state.id, container));
 			container.on("resize", () => {
-				if (this.logViewer) {
-					$(document).ready(() => {
-						this.logViewer.resize();
-					});
+				let viewer = logViewers.get(state.id);
+				if (viewer) {
+					viewer.resize();
 				}
 			});
 		});
@@ -60,12 +60,14 @@ class PanelController {
 		// Add as properties
 		this.codeEditors = codeEditors;
 		this.lexiconViewers = lexiconViewers;
+		this.logViewers = logViewers;
 		this.layout = layout;
 	}
 
 	clear() {
 		this.codeEditors.forEach((editor)    => { editor.close(); });
 		this.lexiconViewers.forEach((viewer) => { viewer.close(); });
+//		this.logViewers.forEach((viewer)     => { viewer.close(); });
 	}
 
 	addEditor(id, content) {
@@ -94,18 +96,19 @@ class PanelController {
 						rows[0].addChild({
 							type: "column",
 							id: "mainColumn"
-						},0);
+						}, 0);
 					} else {
 						this.layout.root.addChild({
 							type: "row",
 							id: "mainRow"
-						},0);
+						}, 0);
 					}
 				}
 				// Try again
 				this.addEditor(id);
 			}
 		}
+
 	}
 
 	addViewer(id) {
@@ -134,8 +137,10 @@ class PanelController {
 			});
 		}
 
-		if (this.logViewer) {
-			this.logViewer.resize();
+		if (this.logViewers) {
+			this.logViewers.forEach((value) => {
+				value.resize();
+			});
 		}
 	}
 
@@ -143,7 +148,10 @@ class PanelController {
 		this.codeEditors.forEach((value) => {
 			value.setTheme(theme);
 		});
-		this.logViewer.setTheme(theme);
+		
+		this.logViewers.forEach((value) => {
+			value.setTheme(theme);
+		});
 
 		$("link[href*='goldenlayout-theme']").attr("href", "css/golden/goldenlayout-theme-" + type + ".css");
 		$("link[href*='didelphis-theme']").attr("href", "css/didelphis-theme-" + type + ".css");
@@ -196,17 +204,17 @@ class PanelController {
 			nm, // Number
 			fn; // Function
 
-		for (var key in cssRules) {
+		for (let key in cssRules) {
 			if (cssRules.hasOwnProperty(key)) {
-				var rule = cssRules[key];
-				var selectorText = rule.selectorText;
+				const rule = cssRules[key];
+				const selectorText = rule.selectorText;
 
 				if (!rule.style) {
 					continue;
 				} // get out
 
-				var background = rule.style["background-color"];
-				var textColor = rule.style.color;
+				const background = rule.style["background-color"];
+				const textColor = rule.style.color;
 				if (selectorText && textColor) {
 					if (/^\.ace-[a-z_\-]+$/.test(selectorText)) {
 						bg = parseColor(background);
@@ -226,14 +234,14 @@ class PanelController {
 			}
 		}
 
-		var dif = minus(bg, tx);
-		var p75 = minus(bg, times(dif, 0.75));
-		var p50 = minus(bg, times(dif, 0.50));
-		var p25 = minus(bg, times(dif, 0.25));
-		var p10 = minus(bg, times(dif, 0.10));
-		var p05 = minus(bg, times(dif, 0.05));
+		const dif = minus(bg, tx);
+		let p75 = minus(bg, times(dif, 0.75));
+		let p50 = minus(bg, times(dif, 0.50));
+		let p25 = minus(bg, times(dif, 0.25));
+		const p10 = minus(bg, times(dif, 0.10));
+		const p05 = minus(bg, times(dif, 0.05));
 
-		var style = PanelController.generateStyle({
+		const style = PanelController.generateStyle({
 			"body": {
 				"background-color": rgbDeparse(bg),
 				"color": rgbDeparse(tx)

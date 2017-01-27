@@ -34,13 +34,15 @@ import java.util.List;
  */
 public class CodeEditor extends AbstractComponent {
 
+	private static final String ACCESS_PATH = PanelController.ACCESS_PATH + ".codeEditors";
+
 	public CodeEditor(String id, WebEngine engine) {
 		super(id, engine);
 	}
 
 	public void setCode(String newCode) {
 		String escaped = StringEscapeUtils.escapeEcmaScript(newCode);
-		execute("controller.codeEditors.get(\"" + getId() + "\").setValue(\"" + escaped + "\");");
+		execute(ACCESS_PATH + ".get(\"" + getId() + "\").setValue(\"" + escaped + "\");");
 	}
 
 	public void saveEditor(File file) {
@@ -52,22 +54,22 @@ public class CodeEditor extends AbstractComponent {
 	}
 
 	public String getCode() {
-		return (String) execute("controller.codeEditors.get(\"" + getId() + "\").getValue();");
+		return (String) execute(ACCESS_PATH + ".get(\"" + getId() + "\").getValue();");
 	}
 	
 	public void setShowHiddenCharacters(boolean b) {
-		execute("controller.codeEditors.get(\"" + getId() + "\").setShowInvisibles(" + b + ')');
+		execute(ACCESS_PATH + ".get(\"" + getId() + "\").setShowInvisibles(" + b + ')');
 	}
 
 	public void clearErrorMarkers() {
-		execute("controller.codeEditors.get(\"" + getId() + "\").clearMarkers();");
-		execute("controller.codeEditors.get(\"" + getId() + "\").clearAnnotations();");
+		execute(ACCESS_PATH + ".get(\"" + getId() + "\").clearMarkers();");
+		execute(ACCESS_PATH + ".get(\"" + getId() + "\").clearAnnotations();");
 	}
 
 	public void addAnnotation(Annotation annotation) {
 		try {
 			String val = new ObjectMapper().writeValueAsString(annotation);
-			execute("controller.codeEditors.get(\"" + getId() + "\").addAnnotation(" + val + ')');
+			execute(ACCESS_PATH + ".get(\"" + getId() + "\").addAnnotation(" + val + ')');
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
@@ -76,17 +78,17 @@ public class CodeEditor extends AbstractComponent {
 	public void setAnnotations(List<Annotation> annotations) {
 		try {
 			String val = new ObjectMapper().writeValueAsString(annotations);
-			execute("controller.codeEditors.get(\"" + getId() + "\").setAnnotations(" + val + ')');
+			execute(ACCESS_PATH + ".get(\"" + getId() + "\").setAnnotations(" + val + ')');
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
 	}
 
 	public void setTheme(String name) {
-		execute("controller.codeEditors.get(\"" + getId() + "\").setTheme(\"ace/theme/" + name + "\");");
+		execute(ACCESS_PATH + ".get(\"" + getId() + "\").setTheme(\"ace/theme/" + name + "\");");
 	}
 
 	public void setFontSize(Number fontSize) {
-		execute("controller.codeEditors.get(\"" + getId() + "\").setFontSize(" + fontSize + ')');
+		execute(ACCESS_PATH + ".get(\"" + getId() + "\").setFontSize(" + fontSize + ')');
 	}
 }

@@ -24,12 +24,14 @@ import org.didelphis.soundchange.ErrorLogger;
  */
 public class LogViewer extends AbstractComponent {
 
+	private static final String ACCESS_PATH = PanelController.ACCESS_PATH + ".logViewers";
+
 	public LogViewer(String id, WebEngine engine) {
 		super(id, engine);
 	}
 
 	public void setTheme(String theme) {
-		execute(getId() + ".setTheme(\"ace/theme/" + theme + "\")");
+		execute(ACCESS_PATH + ".get(\"" +getId() + ").setTheme(\"ace/theme/" + theme + "\")");
 	}
 
 	public void error(ErrorLogger.Error error) {
@@ -49,11 +51,11 @@ public class LogViewer extends AbstractComponent {
 		stringbuilder.append('\n');
 		String input = stringbuilder.toString();
 		String escaped = StringEscapeUtils.escapeEcmaScript(input);
-		execute(getId() + ".append(\"" + escaped + "\");");
+		execute(ACCESS_PATH + ".get(\"" +getId() + ").append(\"" + escaped + "\");");
 	}
 
 	public void clear() {
-		execute("controller."+getId() + ".clear();");
+		execute(ACCESS_PATH + ".get(\"" +getId() + "\").clear();");
 	}
 
 	private static String build(String... strings) {
@@ -69,6 +71,6 @@ public class LogViewer extends AbstractComponent {
 		String escaped = StringEscapeUtils.escapeEcmaScript(
 				build("[", code, "] line: ", n, " ", script, " | ", message, "\n", data, "\n")
 		);
-		execute(getId() + ".append(\"" + escaped + "\");");
+		execute(ACCESS_PATH + ".get(\"" +getId() + "\").append(\"" + escaped + "\");");
 	}
 }

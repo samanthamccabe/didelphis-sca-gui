@@ -44,23 +44,25 @@ let config = {
 			content: [{
 				type: "stack",
 				id: "editorStack",
-				content: [{
-					type: "component",
-					componentName: "Script Editor",
-					isClosable: true,
-					componentState: {
-						id: "main"
-					}
-				}]
+				content: [
+					// {type: "component",
+					// componentName: "Script Editor",
+					// isClosable: true,
+					// componentState: {
+					// 	id: "main"
+					// }}
+				]
 			}, {
+				// Still include it ?
 				type: "component",
 				componentName: "Log View",
 				isClosable: false,
 				height: 20,
 				componentState: {
-					id: "logView"
+					id: "logViewer"
 				}
-			}]
+			}
+			]
 		}]
 		// },{
 		// 	type: "stack",
@@ -75,4 +77,6 @@ window.onload = function () {
 	controller = new PanelController(config);
 	controller.layout.init();
 	window.onresize = controller.resize;
+	
+	// controller.addEditor("main", "% New Script");
 };
