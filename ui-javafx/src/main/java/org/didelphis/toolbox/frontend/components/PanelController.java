@@ -14,13 +14,10 @@
 
 package org.didelphis.toolbox.frontend.components;
 
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker;
-import javafx.event.EventHandler;
 import javafx.scene.layout.StackPane;
 import javafx.scene.web.WebEngine;
-import javafx.scene.web.WebEvent;
 import javafx.scene.web.WebView;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -56,7 +53,8 @@ public final class PanelController extends StackPane {
 	private static final DecimalFormat FORMAT = new DecimalFormat("#0.00");
 	private static final Pattern TRIM_PATH = Pattern.compile(".*[/\\\\]");
 	private static final long MILLI = 1000000L;
-	
+	private static final String HTML_PATH = "panelview.html";
+
 	private final WebEngine engine;
 	private final ErrorLogger errorLogger;
 	private final Map<String, CodeEditor> codeEditors;
@@ -99,26 +97,19 @@ public final class PanelController extends StackPane {
 						addCodeEditor(projectRoot.getId(), "% New Script");
 					}
 				});
-		
-		
 	}
 	
 	private static String generateResourceURL() {
 		URL resource = PanelController.class
 				.getClassLoader()
-				.getResource("panelview.html");
+				.getResource(HTML_PATH);
 		return (resource != null) ? resource.toExternalForm() : null;
 	}
 
-	private CodeEditor addCodeEditor(String id, String content) {
-		if (codeEditors.containsKey(id)) {
-			return codeEditors.get(id);
-		} else {
+	private void addCodeEditor(String id, String content) {
 			CodeEditor value = new CodeEditor(id, engine);
 			codeEditors.put(id, value);
 			executeCommand("controller.addEditor",id, content);
-			return value;
-		}
 	}
 
 	public void saveProjectAs(File file) {
@@ -142,12 +133,8 @@ public final class PanelController extends StackPane {
 		try {
 			String data = FileUtils.readFileToString(file);
 			String id = projectRoot.getId();
-			CodeEditor codeEditor = new CodeEditor(id, engine);
 
-			String script = StringEscapeUtils.escapeEcmaScript(data);
-			engine.executeScript("controller.addEditor(\"" + id + "\",\""+script+"\")");
-//			codeEditor.setCode(data);
-			codeEditors.put(id, codeEditor);
+			addCodeEditor(id, data);
 			compileScript();
 			// TODO: add hooks for opening other files
 		} catch (IOException e) {

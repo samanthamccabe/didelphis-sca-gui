@@ -31,7 +31,7 @@ public class LogViewer extends AbstractComponent {
 	}
 
 	public void setTheme(String theme) {
-		execute(ACCESS_PATH + ".get(\"" +getId() + ").setTheme(\"ace/theme/" + theme + "\")");
+		execute(ACCESS_PATH + ".get(\"" +getId() + "\").setTheme(\"ace/theme/" + theme + "\")");
 	}
 
 	public void error(ErrorLogger.Error error) {
@@ -51,7 +51,7 @@ public class LogViewer extends AbstractComponent {
 		stringbuilder.append('\n');
 		String input = stringbuilder.toString();
 		String escaped = StringEscapeUtils.escapeEcmaScript(input);
-		execute(ACCESS_PATH + ".get(\"" +getId() + ").append(\"" + escaped + "\");");
+		execute(ACCESS_PATH + ".get(\"" +getId() + "\").append(\"" + escaped + "\");");
 	}
 
 	public void clear() {

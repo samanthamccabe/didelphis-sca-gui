@@ -5,7 +5,7 @@
 class PanelController {
 	constructor(config) {
 		let codeEditors    = new Map();
-		let lexiconViewers = new Map();	
+		let lexiconViewers = new Map();
 		let logViewers     = new Map();
 		
 		let layout = new GoldenLayout(config);
