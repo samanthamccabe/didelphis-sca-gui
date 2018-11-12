@@ -1,53 +1,24 @@
 <!DOCTYPE html>
+<!--suppress HtmlUnknownTarget -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
 
     <link type="text/css" rel="stylesheet"
-          href="/css/goldenlayout-base.css"/>
+          href="/main.css"/>
+
     <link type="text/css" rel="stylesheet"
-          href="/css/goldenlayout-dark-theme.css"/>
+          href="/css/goldenlayout-base.css"/>
+
+    <link type="text/css" rel="stylesheet"
+          href="/css/goldenlayout-light-theme.css"/>
 
 </head>
 <body>
-    <h2>Test</h2>
-
-    <script type="text/javascript"
-            src="/js/jquery-3.3.1.js"></script>
-    <script type="text/javascript"
-            src="/js/goldenlayout.js"></script>
-    <script>
-        var config = {
-            content: [{
-                type: 'row',
-                content: [
-                    {
-                        type:'component',
-                        componentName: 'example',
-                        componentState: { text: 'Component 1' }
-                    },
-                    {
-                        type:'component',
-                        componentName: 'example',
-                        componentState: { text: 'Component 2' }
-                    },
-                    {
-                        type:'component',
-                        componentName: 'example',
-                        componentState: { text: 'Component 3' }
-                    }
-                ]
-            }]
-        };
-
-        var myLayout = new GoldenLayout( config );
-
-        myLayout.registerComponent( 'example', function( container, state ){
-            container.getElement().html( '<h2>' + state.text + '</h2>');
-        });
-
-        myLayout.init();
-    </script>
+    <script type="text/javascript" src="/js/jquery-3.3.1.js"></script>
+    <script type="text/javascript" src="/js/ace/ace.js"></script>
+    <script type="text/javascript" src="/js/goldenlayout.js"></script>
+    <script type="text/javascript" src="main.js"></script>
 </body>
 </html>
