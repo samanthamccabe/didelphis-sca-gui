@@ -1,47 +1,51 @@
-var config = {
+let config = {
+  content: [{
+    type: 'column',
     content: [{
-        type: 'row',
-        content: [
-            {
-                type:'component',
-                componentName: 'example',
-                componentState: { 
-                    id: 'Component1',
-                    text: 'Component 1'
-                }
-            },
-            {
-                type:'component',
-                componentName: 'example',
-                componentState: {
-                    id: 'Component2',
-                    text: 'Component 2' 
-                }
-            },
-            {
-                type:'component',
-                componentName: 'example',
-                componentState: {
-                    id: 'Component3',
-                    text: 'Component 3'
-                }
-            }
-        ]
+      type: 'stack',
+      content: [{
+        type: 'component',
+        componentName: 'editor',
+        componentState: {
+          id: 'Editor1',
+          text: '% Editor 1'
+        }
+      }]
+    }, {
+      title: "Message Log",
+      type: 'component',
+      componentName: 'logview',
+      componentState: {
+        id: 'ConsoleLog',
+        text: '[INFO] LOG START'
+      },
+      isClosable: false
     }]
+  }]
 };
 
-var myLayout = new GoldenLayout( config );
+let myLayout = new GoldenLayout(config);
 
-myLayout.registerComponent('example', function (container, state) {
-    container.getElement()
-        .html('<div id=' + state.id + ' class=editor>' + state.text + '</div>');
-    
-    container.on('open', function () {
-        var editor = ace.edit(state.id);
-        editor.setTheme("ace/theme/vibrant_ink");
-        editor.session.setMode("ace/mode/java");  
-        container.editor = editor;
-    });
+myLayout.registerComponent('editor', function(container, state) {
+  container.getElement()
+    .html('<div id=' + state.id + ' class=editor>' + state.text + '</div>');
+  container.on('open', () => {
+    let editor = ace.edit(state.id);
+    editor.setTheme("ace/theme/crimson_editor");
+    editor.session.setMode("ace/mode/didelphissca");
+    container.editor = editor;
+  });
+});
+
+myLayout.registerComponent('logview', function(container, state) {
+  container.getElement()
+    .html('<div id=' + state.id + ' class=editor>' + state.text + '</div>');
+  container.on('open', () => {
+    let editor = ace.edit(state.id);
+    editor.setTheme("ace/theme/crimson_editor");
+    editor.session.setMode("ace/mode/didelphislog");
+    container.editor = editor;
+  });
 });
 
 myLayout.init();

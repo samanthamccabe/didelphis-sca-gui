@@ -1,3 +1,24 @@
+body {
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    color: #888888;
+}
+
 div.editor {
     height: 100%;
+}
+
+.windowHeader {
+    background-color: #cccccc;
+}
+
+.buttonListH {
+    display: inline-flex;
+    list-style: none;
+}
+
+.buttonListH > li {
+    border: 1px #e0e0e0 solid;
+    padding: 1px 2px 1px 2px;
+    margin: 1px 2px 1px 2px;
 }
