@@ -18,7 +18,7 @@
   "license": "CC0-1.0",
   "devDependencies": {
     "electron": "^3.0.4",
-    "tree-kill":"^1.2.1",
-    "minimal-request-promise":"^1.5.0"
+    "tree-kill": "^1.2.1",
+    "minimal-request-promise": "^1.5.0"
   }
 }
