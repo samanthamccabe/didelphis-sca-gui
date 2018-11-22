@@ -1,39 +1,58 @@
 <!DOCTYPE html>
 <!--suppress HtmlUnknownTarget -->
-<html lang="en">
+<html class="no-js" lang="en" dir="ltr">
 <head>
 
-    <meta charset="UTF-8">
-    <title>Title</title>
+  <meta charset="UTF-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link type="text/css" rel="stylesheet"
-          href="/main.css"/>
+  <title>Didelphis Architekton</title>
 
-    <link type="text/css" rel="stylesheet"
-          href="/css/goldenlayout-base.css"/>
-
-    <link type="text/css" rel="stylesheet"
-          href="/css/goldenlayout-light-theme.css"/>
-
+  <link type="text/css" rel="stylesheet" href="main.css"/>
+  <link type="text/css" rel="stylesheet" href="css/gl-base.css"/>
+  <link type="text/css" rel="stylesheet" href="css/gl-light-theme.css"/>
+  <link type="text/css" rel="stylesheet" href="css/foundation.css"/>
 </head>
 <body>
-    <script 
-        src="/js/jquery-3.3.1.js" 
-        onload="window.$ = window.jQuery = module.exports;"
-    ></script>
-
-    <script type="text/javascript" src="/js/ace/ace.js"></script>
-    <script type="text/javascript" src="/js/goldenlayout.js"></script>
-
-    <script type="text/javascript" src="main.js"></script>
-
-    <div class="windowHeader">
-        <ul class="buttonListH">
-            <li>Project</li>
-            <li>View</li>
-            <li>Settings</li>
-            <li>Information</li>
+<!-- Loading jQuery this way was necessary for Electron
+  <script 
+    src="/js/jquery.js" 
+    onload="window.$ = window.jQuery = module.exports;"
+  ></script>
+-->
+  <div class="menu-bar">
+    <ul class="dropdown menu" data-dropdown-menu>
+      <li>
+        <a>Project</a>
+        <ul class="menu z-override-mid">
+          <li><a href="#0">New Project</a></li>
+          <li>
+            <label for="openFile"><a>Open Project</a></label>
+            <input type="file" id="openFile" class="show-for-sr">
+          </li>
+          <li>
+            <label for="saveFile"><a>Save Project</a></label>
+            <input type="file" id="saveFile" class="show-for-sr">
+        </li>
         </ul>
-    </div>
+      </li>
+      <li>
+        <a>View</a>
+        <ul class="menu z-override-mid">
+          <li><a href="#0">Select Theme</a></li>
+          <li><a href="#0">Font Size</a></li>
+        </ul>
+      </li>
+      <li><a>Settings</a></li>
+      <li><a>Information</a></li>
+    </ul>
+  </div>
+
+  <script type="text/javascript" src="js/jquery.js"></script>
+  <script type="text/javascript" src="js/ace/ace.js"></script>
+  <script type="text/javascript" src="js/goldenlayout.js"></script>
+  <script type="text/javascript" src="js/foundation.js"></script>
+  <script type="text/javascript" src="main.js"></script>
 </body>
 </html>

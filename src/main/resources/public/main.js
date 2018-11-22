@@ -49,3 +49,11 @@ myLayout.registerComponent('logview', function(container, state) {
 });
 
 myLayout.init();
+
+$(document).foundation();
+
+(function() {
+  $("#openFile").on("change", (event) => {
+    console.log(event);
+  });
+})();
