@@ -1,1 +1,0 @@
-java -jar target/didelphis-sca-ui-0.1.0-SNAPSHOT.jar
