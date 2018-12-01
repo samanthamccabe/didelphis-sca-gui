@@ -8,6 +8,10 @@ div.editor {
     height: 100%;
 }
 
+.file-tree {
+    margin-left: 1rem;
+}
+
 .menu-bar {
     background-color: #f4f4f4;
 }
