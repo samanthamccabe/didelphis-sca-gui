@@ -1,0 +1,36 @@
+body {
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    color: #888888;
+}
+
+div.editor {
+    height: 100%;
+}
+
+.file-tree {
+    margin-left: 1rem;
+}
+
+.menu-bar {
+    background-color: #f4f4f4;
+}
+
+.buttonListH {
+    display: inline-flex;
+    list-style: none;
+}
+
+.buttonListH > li {
+    border: 1px #e0e0e0 solid;
+    padding: 1px 2px 1px 2px;
+    margin: 1px 2px 1px 2px;
+}
+
+.z-override-mid {
+    z-index: 5!important;
+}
+
+.menu-bar li a {
+    font-size: 0.75rem;
+}
