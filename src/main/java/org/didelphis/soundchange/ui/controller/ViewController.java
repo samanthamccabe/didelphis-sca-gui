@@ -1,5 +1,6 @@
 package org.didelphis.soundchange.ui.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.didelphis.io.DiskFileHandler;
@@ -34,6 +35,8 @@ public class ViewController {
 		FeatureType<?> type = IntegerFeature.INSTANCE;
 		FileHandler handler = new DiskFileHandler("UTF-8");
 
+		ErrorLogger errorLogger = new ErrorLogger();
+
 		try {
 			JsonNode jsonNode = OBJECT_MAPPER.readTree(object);
 
@@ -45,7 +48,7 @@ public class ViewController {
 					type,
 					data,
 					handler,
-					new ErrorLogger()
+					errorLogger
 			);
 
 			scriptParser.parse();
@@ -56,7 +59,13 @@ public class ViewController {
 		} catch (ParseException e) {
 			LOG.error("Failed to compile from request {}", object, e);
 		}
-		return "Failed";
+
+		try {
+			return OBJECT_MAPPER.writeValueAsString(errorLogger);
+		} catch (JsonProcessingException e) {
+			LOG.error("Failed to serialize error logger {}", errorLogger.toString(), e);
+		}
+		return "FAILED";
 	}
 
 	@RequestMapping (
