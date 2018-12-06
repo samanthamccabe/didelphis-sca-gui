@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.didelphis</groupId>
+        <artifactId>didelphis-sca-ui</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>sca-ui-spring-boot</artifactId>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution><goals><goal>repackage</goal></goals></execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.1.1</version>
+                <executions>
+                    <execution>
+                        <id>unpack</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.didelphis</groupId>
+                                    <artifactId>sca-ui-resources</artifactId>
+                                    <version>0.1.0-SNAPSHOT</version>
+                                    <type>jar</type>
+                                    <overWrite>true</overWrite>
+                                </artifactItem>
+                            </artifactItems>
+                            <outputDirectory>
+                                ${project.build.directory}/classes/resources
+                            </outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+
+        <dependency>
+            <groupId>org.didelphis</groupId>
+            <artifactId>didelphis-sca</artifactId>
+            <version>${didelphis-sca.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.didelphis.common</groupId>
+            <artifactId>didelphis-common-language</artifactId>
+            <version>${didelphis-common.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.didelphis.common</groupId>
+            <artifactId>didelphis-common-io</artifactId>
+            <version>${didelphis-common.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.didelphis.common</groupId>
+            <artifactId>didelphis-common-structures</artifactId>
+            <version>${didelphis-common.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.didelphis.common</groupId>
+            <artifactId>didelphis-common-utilities</artifactId>
+            <version>${didelphis-common.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <version>${spring-boot.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+            <version>${spring-boot.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+            <version>${spring-boot.version}</version>
+        </dependency>
+
+    </dependencies>
+    
+</project>
