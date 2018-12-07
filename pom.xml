@@ -20,6 +20,7 @@
     <modules>
         <module>sca-ui-resources</module>
         <module>sca-ui-spring-boot</module>
+        <module>sca-ui-javafx</module>
     </modules>
 
     <properties>
