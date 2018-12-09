@@ -32,7 +32,7 @@ public class WebViewApplication extends Application {
 
 	private static String generateResourceURL() {
 		URL resource = WebViewApplication.class.getClassLoader()
-				.getResource("index.html");
+				.getResource("resources/index.html");
 		return (resource != null) ? resource.toExternalForm() : null;
 	}
 }
