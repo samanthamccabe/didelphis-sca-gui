@@ -7,8 +7,12 @@ const BrowserWindow = electron.BrowserWindow;
 const path = require('path');
 const url = require('url');
 
-const STATUS_ENDPOINT = "http://localhost:8080/status";
-const KILL_ENDPOINT = "http://localhost:8080/kill";
+const HOST = "localhost";
+const PORT = "8080";
+
+const BASE_ENDPOINT   = "http://" + HOST + ":" + PORT + "/";
+const STATUS_ENDPOINT = BASE_ENDPOINT + "status";
+const KILL_ENDPOINT   = BASE_ENDPOINT + "kill";
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -23,7 +27,7 @@ if (platform === 'win32') {
           {cwd: app.getAppPath()});
 } else {
   serverProcess = require('child_process')
-      .spawn(app.getAppPath() + 'java -jar sca-server.jar');
+      .exec('java -jar sca-server.jar', { cwd: app.getAppPath() });
 }
 
 function createWindow () {
