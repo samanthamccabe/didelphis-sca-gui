@@ -1,3 +1,7 @@
+let logview = null;
+
+const ENDPOINT = "http://localhost:8080";
+
 let config = {
 	content: [{
 		type: 'column',
@@ -71,6 +75,8 @@ myLayout.registerComponent('logview', function (container, state) {
 		editor.setTheme("ace/theme/crimson_editor");
 		editor.session.setMode("ace/mode/didelphislog");
 		container.editor = editor;
+
+		logview = editor;
 	});
 });
 
@@ -78,27 +84,49 @@ myLayout.init();
 
 $(document).foundation();
 
+function kill() {
+	$.ajax({
+		url: ENDPOINT + "/kill",
+		method: "GET",
+		success: (response) => {
+			console.log(response);
+		},
+		error: (response) => {
+			console.log(response);
+		}
+	})
+}
+
 (function () {
 	$("#openFile").on("change", function () {
 		let file = this.files[0];
 		let fileReader = new FileReader();
+
+		let string = "";
+		for (let field in Object.keys(file)) {
+			string += field + "\n";
+			console.log(field);
+		}
+
+		logview.setValue(string);
+
 		fileReader.onload = function () {
 			let content = this.result;
-			$.ajax({
-				url: "http://localhost:8080/loadNewProject",
-				method: "POST",
-				contentType: "application/json; charset=UTF-8",
-				data: JSON.stringify({
-					data: content,
-					path: file.name
-				}),
-				success: (response) => {
-					console.log(response);
-				},
-				error: (response) => {
-					console.log(response);
-				}
-			})
+			// $.ajax({
+			// 	url: "http://localhost:8080/loadNewProject",
+			// 	method: "POST",
+			// 	contentType: "application/json; charset=UTF-8",
+			// 	data: JSON.stringify({
+			// 		data: content,
+			// 		path: file.name
+			// 	}),
+			// 	success: (response) => {
+			// 		console.log(response);
+			// 	},
+			// 	error: (response) => {
+			// 		console.log(response);
+			// 	}
+			// })
 		};
 		fileReader.readAsText(file);
 	});

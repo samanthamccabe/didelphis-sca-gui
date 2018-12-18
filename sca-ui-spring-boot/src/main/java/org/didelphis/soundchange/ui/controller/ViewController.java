@@ -69,11 +69,19 @@ public class ViewController {
 	}
 
 	@RequestMapping (
-			value    = "/test",
-			method   = RequestMethod.GET,
-			produces = MediaType.TEXT_PLAIN_VALUE
+			value    = "/status",
+			method   = RequestMethod.GET
 	)
-	public String test() {
-		return "This is a test";
+	public String status() {
+		return "Running";
+	}
+
+	@RequestMapping (
+			value    = "/kill",
+			method   = RequestMethod.GET
+	)
+	public String kill() {
+		System.exit(0);
+		return "Server Killed";
 	}
 }

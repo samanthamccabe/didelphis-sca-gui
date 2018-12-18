@@ -8,6 +8,15 @@ div.editor {
     height: 100%;
 }
 
+#tree {
+    height: 100%;
+}
+
+#tree ul {
+    border: none;
+    height: 100%;
+}
+
 .file-tree {
     margin-left: 1rem;
 }
