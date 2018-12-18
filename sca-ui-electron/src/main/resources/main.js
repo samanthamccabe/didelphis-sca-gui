@@ -1,11 +1,15 @@
 const electron = require('electron');
+const promise  = require('minimal-request-promise');
+const path     = require('path');
+const url      = require('url');
+
+const { exec, spawn } = require('child_process');
+
 // Module to control application life.
 const app = electron.app;
+
 // Module to create native browser window.
 const BrowserWindow = electron.BrowserWindow;
-
-const path = require('path');
-const url = require('url');
 
 const HOST = "localhost";
 const PORT = "8080";
@@ -18,17 +22,15 @@ const KILL_ENDPOINT   = BASE_ENDPOINT + "kill";
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
 
+// Used to check operating system
 platform = process.platform;
 
-// Check operating system
-if (platform === 'win32') {
-  serverProcess = require('child_process')
-      .spawn('cmd.exe', ['/c', 'java', '-jar', 'sca-server.jar'],
-          {cwd: app.getAppPath()});
-} else {
-  serverProcess = require('child_process')
-      .exec('java -jar sca-server.jar', { cwd: app.getAppPath() });
-}
+// Part of the server startup configuration
+const appPath = app.getAppPath();
+const serverOptions = {
+  cwd: appPath,
+  detached: false
+};
 
 function createWindow () {
   // Create the browser window.
@@ -62,9 +64,7 @@ function createWindow () {
 }
 
 const startUp = function () {
-  const requestPromise = require('minimal-request-promise');
-
-  requestPromise.get(STATUS_ENDPOINT).then(function (response) {
+  promise.get(STATUS_ENDPOINT).then(function (response) {
     console.log('Server started!');
     createWindow();
   }, function (response) {
@@ -77,9 +77,7 @@ const startUp = function () {
 };
 
 const shutDown = function () {
-  require('minimal-request-promise')
-      .get(KILL_ENDPOINT)
-      .then(function (response) {
+  promise.get(KILL_ENDPOINT).then(function (response) {
         console.log('Server Killed!', response);
       }, function (response) {
         console.log('Waiting for server shutdown...');
@@ -88,11 +86,6 @@ const shutDown = function () {
         }, 1000);
       });
 };
-
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-// app.on('ready', );
 
 // Quit when all windows are closed.
 app.on('window-all-closed', function () {
@@ -112,7 +105,15 @@ app.on('activate', function () {
   }
 });
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
-
-startUp();
+// This method will be called when Electron has finished
+// initialization and is ready to create browser windows.
+// Some APIs can only be used after this event occurs.
+app.on('ready', () => {
+  // initialize Java backend
+  if (platform === 'win32') {
+    spawn('cmd.exe', ['/c', 'java', '-jar', 'sca-server.jar'], serverOptions);
+  } else {
+    exec('java -jar sca-server.jar', serverOptions);
+  }
+  startUp();
+});
