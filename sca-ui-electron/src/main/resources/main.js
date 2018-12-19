@@ -110,10 +110,15 @@ app.on('activate', function () {
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
   // initialize Java backend
-  if (platform === 'win32') {
-    spawn('cmd.exe', ['/c', 'java', '-jar', 'sca-server.jar'], serverOptions);
-  } else {
-    exec('java -jar sca-server.jar', serverOptions);
-  }
+
+  promise.get(STATUS_ENDPOINT).then(function (response) {
+    console.log('Server already running with status' + response + '; continuing normally.');
+  }, function () {
+    if (platform === 'win32') {
+      spawn('cmd.exe', ['/c', 'java', '-jar', 'sca-server.jar'], serverOptions);
+    } else {
+      exec('java -jar sca-server.jar', serverOptions);
+    }
+  });
   startUp();
 });

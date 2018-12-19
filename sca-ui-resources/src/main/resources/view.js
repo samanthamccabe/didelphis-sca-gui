@@ -1,5 +1,7 @@
 let logview = null;
 
+const CONTENT_JSON = "application/json; charset=UTF-8";
+
 const ENDPOINT = "http://localhost:8080";
 
 let config = {
@@ -41,6 +43,36 @@ let config = {
 };
 
 let myLayout = new GoldenLayout(config);
+
+const LOG = {
+	info: (message) => {
+		if (logview) {
+			let value = logview.getValue();
+			value += "[INFO] " + message;
+			logview.setValue(value);
+		} else {
+			console.log("[INFO] UI Console unavailable --- ", message);
+		}
+	},
+	warn: (message) => {
+		if (logview) {
+			let value = logview.getValue();
+			value += "[WARN] " + message;
+			logview.setValue(value);
+		} else {
+			console.log("[WARN] UI Console unavailable --- ", message);
+		}
+	},
+	error: (message) => {
+		if (logview) {
+			let value = logview.getValue();
+			value += "[ERROR] " + message;
+			logview.setValue(value);
+		} else {
+			console.log("[ERROR] UI Console unavailable --- ", message);
+		}
+	}
+};
 
 myLayout.registerComponent('editor', function (container, state) {
 	container.getElement()
@@ -112,21 +144,21 @@ function kill() {
 
 		fileReader.onload = function () {
 			let content = this.result;
-			// $.ajax({
-			// 	url: "http://localhost:8080/loadNewProject",
-			// 	method: "POST",
-			// 	contentType: "application/json; charset=UTF-8",
-			// 	data: JSON.stringify({
-			// 		data: content,
-			// 		path: file.name
-			// 	}),
-			// 	success: (response) => {
-			// 		console.log(response);
-			// 	},
-			// 	error: (response) => {
-			// 		console.log(response);
-			// 	}
-			// })
+			$.ajax({
+				url: ENDPOINT + "/loadNewProject",
+				method: "POST",
+				contentType: CONTENT_JSON,
+				data: JSON.stringify({
+					data: content,
+					path: file.name
+				}),
+				success: response => {
+					LOG.info(response);
+				},
+				error: response => {
+					LOG.error(response);
+				}
+			})
 		};
 		fileReader.readAsText(file);
 	});
