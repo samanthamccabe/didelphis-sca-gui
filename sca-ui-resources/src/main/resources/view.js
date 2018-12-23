@@ -1,8 +1,41 @@
-let logview = null;
+let logView  = null;
+let fileTree = null;
+
+const editors = {};
 
 const CONTENT_JSON = "application/json; charset=UTF-8";
 
 const ENDPOINT = "http://localhost:8080";
+
+const LOG = {
+	info: (message) => {
+		if (logView) {
+			let value = logView.getValue();
+			value += "[INFO] " + message;
+			logView.setValue(value);
+		} else {
+			console.log("[INFO] UI Console unavailable --- ", message);
+		}
+	},
+	warn: (message) => {
+		if (logView) {
+			let value = logView.getValue();
+			value += "[WARN] " + message;
+			logView.setValue(value);
+		} else {
+			console.log("[WARN] UI Console unavailable --- ", message);
+		}
+	},
+	error: (message) => {
+		if (logView) {
+			let value = logView.getValue();
+			value += "[ERROR] " + message;
+			logView.setValue(value);
+		} else {
+			console.log("[ERROR] UI Console unavailable --- ", message);
+		}
+	}
+};
 
 let config = {
 	content: [{
@@ -32,7 +65,7 @@ let config = {
 		}, {
 			title: "Message Log",
 			type: 'component',
-			componentName: 'logview',
+			componentName: 'logView',
 			componentState: {
 				id: 'ConsoleLog',
 				text: '[INFO] LOG START'
@@ -44,36 +77,6 @@ let config = {
 
 let myLayout = new GoldenLayout(config);
 
-const LOG = {
-	info: (message) => {
-		if (logview) {
-			let value = logview.getValue();
-			value += "[INFO] " + message;
-			logview.setValue(value);
-		} else {
-			console.log("[INFO] UI Console unavailable --- ", message);
-		}
-	},
-	warn: (message) => {
-		if (logview) {
-			let value = logview.getValue();
-			value += "[WARN] " + message;
-			logview.setValue(value);
-		} else {
-			console.log("[WARN] UI Console unavailable --- ", message);
-		}
-	},
-	error: (message) => {
-		if (logview) {
-			let value = logview.getValue();
-			value += "[ERROR] " + message;
-			logview.setValue(value);
-		} else {
-			console.log("[ERROR] UI Console unavailable --- ", message);
-		}
-	}
-};
-
 myLayout.registerComponent('editor', function (container, state) {
 	container.getElement()
 		.html('<div id=' + state.id + ' class=editor>' + state.text + '</div>');
@@ -82,6 +85,7 @@ myLayout.registerComponent('editor', function (container, state) {
 		editor.setTheme("ace/theme/crimson_editor");
 		editor.session.setMode("ace/mode/didelphissca");
 		container.editor = editor;
+		editors[state.id] = editor;
 	});
 });
 
@@ -89,17 +93,20 @@ myLayout.registerComponent('project', function (container, state) {
 	container.getElement()
 		.html('<div id="tree"></div>');
 	container.on('open', () => {
-		$("#tree").fancytree({
-			checkbox: true,
+		let $tree = $("#tree");
+		
+		$tree.fancytree({
+			// checkbox: true,
 			source: [],
 			activate: function(event, data){
 				$("#status").text("Activate: " + data.node);
 			}
 		});
+		fileTree = $tree.fancytree("getTree");
 	});
 });
 
-myLayout.registerComponent('logview', function (container, state) {
+myLayout.registerComponent('logView', function (container, state) {
 	container.getElement()
 		.html('<div id=' + state.id + ' class=editor>' + state.text + '</div>');
 	container.on('open', () => {
@@ -107,8 +114,7 @@ myLayout.registerComponent('logview', function (container, state) {
 		editor.setTheme("ace/theme/crimson_editor");
 		editor.session.setMode("ace/mode/didelphislog");
 		container.editor = editor;
-
-		logview = editor;
+		logView = editor;
 	});
 });
 
@@ -129,37 +135,20 @@ function kill() {
 	})
 }
 
-(function () {
-	$("#openFile").on("change", function () {
-		let file = this.files[0];
-		let fileReader = new FileReader();
+$("#openFile").on("change", function () {
+	let file = this.files[0];
 
-		let string = "";
-		for (let field in Object.keys(file)) {
-			string += field + "\n";
-			console.log(field);
+	$.ajax({
+		url: ENDPOINT + "/loadNewProject",
+		method: "POST",
+		contentType: CONTENT_JSON,
+		data: file.path,
+		success: response => {
+			// LOG.info(response);
+			fileTree.reload(JSON.parse(response));
+		},
+		error: response => {
+			LOG.error(response);
 		}
-
-		logview.setValue(string);
-
-		fileReader.onload = function () {
-			let content = this.result;
-			$.ajax({
-				url: ENDPOINT + "/loadNewProject",
-				method: "POST",
-				contentType: CONTENT_JSON,
-				data: JSON.stringify({
-					data: content,
-					path: file.name
-				}),
-				success: response => {
-					LOG.info(response);
-				},
-				error: response => {
-					LOG.error(response);
-				}
-			})
-		};
-		fileReader.readAsText(file);
-	});
-})();
+	})
+});
