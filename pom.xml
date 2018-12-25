@@ -39,7 +39,6 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>sca-ui-resources</module>
         <module>sca-ui-spring-boot</module>
         <module>sca-ui-electron</module>
     </modules>

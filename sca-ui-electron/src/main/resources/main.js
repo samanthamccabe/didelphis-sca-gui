@@ -48,7 +48,7 @@ platform = process.platform;
 // Part of the server startup configuration
 const appPath = app.getAppPath();
 const serverOptions = {
-  cwd: appPath,
+  cwd: appPath + "/server/",
   detached: false
 };
 
@@ -67,7 +67,7 @@ function createWindow () {
 
   // and load the index.html of the app.
   mainWindow.loadURL(url.format({
-    pathname: path.join(__dirname, 'index.html'),
+    pathname: path.join(__dirname, 'render/index.html'),
     protocol: 'file:',
     slashes: true
   }));
