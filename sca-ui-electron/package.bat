@@ -1,0 +1,1 @@
+electron-packager target didelphis-grammatekton --platform=win32 --arch=x64

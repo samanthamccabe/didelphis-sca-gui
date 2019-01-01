@@ -50,7 +50,7 @@ const platform = process.platform;
 // Part of the server startup configuration
 const appPath = app.getAppPath();
 const serverOptions = {
-  cwd: appPath + '/',
+  cwd: appPath + '/server/',
   detached: false
 };
 

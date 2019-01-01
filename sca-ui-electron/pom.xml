@@ -37,47 +37,64 @@
         <ui-spring-boot.version>0.1.0-SNAPSHOT</ui-spring-boot.version>
     </properties>
 
+    <profiles>
+        <profile>
+            <id>electron-pacakger</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>1.4.0</version>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <executions>
+                            <execution>
+                                <id>copy-resources</id>
+                                <!-- here the phase you need -->
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>package</executable>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
     <build>
         <plugins>
-
-            <!-- Clean dist folder instead of target -->
-<!--            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-clean-plugin</artifactId>
-                <configuration>
-                    <filesets>
-                        <fileset>
-                            <directory>${project.basedir}/dist</directory>
-                        </fileset>
-                    </filesets>
-                </configuration>
-            </plugin>-->
-
-            <!-- Build project with webpack -->
-<!--            <plugin>
-                <artifactId>exec-maven-plugin</artifactId>
-                <groupId>org.codehaus.mojo</groupId>
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.1.0</version>
                 <executions>
                     <execution>
-                        <id>yarn-compile</id>
-                        <phase>generate-sources</phase>
+                        <id>copy-resources</id>
+                        <!-- here the phase you need -->
+                        <phase>validate</phase>
                         <goals>
-                            <goal>exec</goal>
+                            <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <executable>yarn</executable>
-                            <arguments>
-                                <argument>compile</argument>
-                            </arguments>
+                            <outputDirectory>${project.build.directory}/</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src</directory>
+                                </resource>
+                            </resources>
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>-->
+            </plugin>
 
             <!-- Copy Server Artifact to dist folder -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.1.1</version>
                 <executions>
                     <execution>
                         <id>copy</id>
@@ -94,7 +111,7 @@
                                     <type>jar</type>
                                     <destFileName>sca-server.jar</destFileName>
                                     <outputDirectory>
-                                        ${project.build.directory}/resources/server
+                                        ${project.build.directory}/server
                                     </outputDirectory>
                                 </artifactItem>
                             </artifactItems>
@@ -107,6 +124,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
+                <version>3.0.1</version>
                 <configuration>
                     <skipSource>true</skipSource>
                 </configuration>
@@ -114,6 +132,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
+                <version>3.1.0</version>
                 <executions>
                     <execution>
                         <id>default-jar</id>
@@ -124,6 +143,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-install-plugin</artifactId>
+                <version>2.5.2</version>
                 <executions>
                     <execution>
                         <id>default-install</id>
