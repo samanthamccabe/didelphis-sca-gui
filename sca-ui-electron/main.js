@@ -23,13 +23,15 @@ const promise  = require('minimal-request-promise');
 const path     = require('path');
 const url      = require('url');
 
-const { exec, spawn } = require('child_process');
+const { exec, spawn } = require ('child_process');
 
 // Module to control application life.
 const app = electron.app;
 
 // Module to create native browser window.
 const BrowserWindow = electron.BrowserWindow;
+
+const isDevelopment = process.env.NODE_ENV !== 'production';
 
 const HOST = "localhost";
 const PORT = "8080";
@@ -43,12 +45,12 @@ const KILL_ENDPOINT   = BASE_ENDPOINT + "kill";
 let mainWindow;
 
 // Used to check operating system
-platform = process.platform;
+const platform = process.platform;
 
 // Part of the server startup configuration
 const appPath = app.getAppPath();
 const serverOptions = {
-  cwd: appPath + "/server/",
+  cwd: appPath + '/',
   detached: false
 };
 
@@ -58,16 +60,15 @@ function createWindow () {
     width:  800,
     height: 600,
     webPreferences: {
-      nodeIntegration: false,
-      devTools: true
+      devTools: true,
+      nodeIntegration: true,
+      webSecurity: false
     }
   });
 
-  // mainWindow.setMenu(null);
-
   // and load the index.html of the app.
   mainWindow.loadURL(url.format({
-    pathname: path.join(__dirname, 'render/index.html'),
+    pathname: path.join(__dirname, '/renderer/index.html'),
     protocol: 'file:',
     slashes: true
   }));
@@ -99,12 +100,9 @@ const startUp = function () {
 
 const shutDown = function () {
   promise.get(KILL_ENDPOINT).then(function (response) {
-        console.log('Server Killed!', response);
+        console.log('Server Going down');
       }, function (response) {
-        console.log('Waiting for server shutdown...');
-        setTimeout(function () {
-          shutDown();
-        }, 1000);
+        console.log('Server unresponsive, presumed killed.');
       });
 };
 
@@ -114,7 +112,7 @@ app.on('window-all-closed', function () {
   // to stay active until the user quits explicitly with Cmd + Q
   if (process.platform !== 'darwin') {
     shutDown();
-    app.quit()
+    app.quit();
   }
 });
 
@@ -122,7 +120,7 @@ app.on('activate', function () {
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (mainWindow === null) {
-    createWindow()
+    createWindow();
   }
 });
 
@@ -132,9 +130,10 @@ app.on('activate', function () {
 app.on('ready', () => {
   // initialize Java backend
 
-  promise.get(STATUS_ENDPOINT).then(function (response) {
-    console.log('Server already running with status' + response + '; continuing normally.');
+  promise.get(STATUS_ENDPOINT).then(function () {
+    console.log('Server already running! continuing normally.');
   }, function () {
+    console.log('Starting server at path ', serverOptions.cwd + 'sca-server.jar');
     if (platform === 'win32') {
       spawn('cmd.exe', ['/c', 'java', '-jar', 'sca-server.jar'], serverOptions);
     } else {

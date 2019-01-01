@@ -6,6 +6,7 @@
 
 *.iml
 .idea/
+*.lock
 
 node_modules/
 

@@ -1,0 +1,26 @@
+{
+  "name": "didelphis-architekton",
+  "version": "0.1.0",
+  "main": "main.js",
+  "description": "An IDE-like user interface for the Didelphis sound-change-applier.",
+  "scripts": {
+    "start": "electron ."
+  },
+  "repository": "https://github.com/samanthamccabe/didelphis-sca-gui/",
+  "keywords": [
+    "Electron"
+  ],
+  "author": "Samanth F McCabe",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "minimal-request-promise": "^1.5.0",
+    "jquery": "^3.3.1",
+    "jquery-ui": "^1.12.1",
+    "jquery.fancytree": "^2.30.1",
+    "golden-layout": "^1.5.9",
+    "ace-builds": "^1.4.2"
+  },
+  "devDependencies": {
+    "electron": "^4.0.0"
+  }
+}
