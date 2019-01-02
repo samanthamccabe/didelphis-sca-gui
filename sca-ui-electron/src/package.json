@@ -4,7 +4,8 @@
   "main": "main.js",
   "description": "An IDE-like user interface for the Didelphis sound-change-applier.",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "start-dev": "electron --inspect=5858 ."
   },
   "repository": "https://github.com/samanthamccabe/didelphis-sca-gui/",
   "keywords": [

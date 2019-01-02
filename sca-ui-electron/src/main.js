@@ -37,8 +37,8 @@ const HOST = "localhost";
 const PORT = "8080";
 
 const BASE_ENDPOINT   = "http://" + HOST + ":" + PORT + "/";
-const STATUS_ENDPOINT = BASE_ENDPOINT + "status";
-const KILL_ENDPOINT   = BASE_ENDPOINT + "kill";
+const STATUS_ENDPOINT = BASE_ENDPOINT + "actuator/health";
+const KILL_ENDPOINT   = BASE_ENDPOINT + "actuator/shutdown";
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -51,7 +51,7 @@ const platform = process.platform;
 const appPath = app.getAppPath();
 const serverOptions = {
   cwd: appPath + '/server/',
-  detached: false
+  detached: true
 };
 
 function createWindow () {
@@ -87,11 +87,10 @@ function createWindow () {
 
 const startUp = function () {
   promise.get(STATUS_ENDPOINT).then(function (response) {
-    console.log('Server started!');
+    console.log('Server started!', response.body ? response.body : "");
     createWindow();
   }, function (response) {
     console.log('Waiting for the server start...');
-
     setTimeout(function () {
       startUp();
     }, 1000);
@@ -99,12 +98,20 @@ const startUp = function () {
 };
 
 const shutDown = function () {
-  promise.get(KILL_ENDPOINT).then(function (response) {
-        console.log('Server Going down');
-      }, function (response) {
-        console.log('Server unresponsive, presumed killed.');
-      });
+  promise.post(KILL_ENDPOINT).then(function (response) {
+    console.log('Server Going down', response.body ? response.body : "");
+    app.quit();
+  }, function (response) {
+    console.log('Server unresponsive?', JSON.stringify(response));
+    setTimeout(function () {
+      shutDown();
+    }, 1000);
+  });
 };
+
+app.on("quit", function () {
+  shutDown();
+});
 
 // Quit when all windows are closed.
 app.on('window-all-closed', function () {
@@ -112,7 +119,6 @@ app.on('window-all-closed', function () {
   // to stay active until the user quits explicitly with Cmd + Q
   if (process.platform !== 'darwin') {
     shutDown();
-    app.quit();
   }
 });
 
