@@ -28,11 +28,11 @@ div.editor {
     height: 100%;
 }
 
-#tree {
+.project {
     height: 100%;
 }
 
-#tree ul {
+.project ul {
     border: none;
     height: 100%;
 }

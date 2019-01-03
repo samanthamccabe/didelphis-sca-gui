@@ -18,8 +18,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.     *
  ******************************************************************************/
 
-let logView = null;
-let fileTree = null;
+let logView      = null;
+let projectTree  = null;
+let projectFiles = null;
 
 // Load electron classes -------------------------------------------------------
 
@@ -35,7 +36,6 @@ window.jQuery = $;
 window.$ = $;
 
 require('jquery-ui');
-// require('jquery-ui/themes/base/core.css');
 require('jquery.fancytree');
 
 const GoldenLayout = require("golden-layout");
@@ -83,40 +83,78 @@ const LOG = {
 	}
 };
 
-let config = {
-	content: [{
-		type: 'column',
-		content: [{
-			type: 'row',
-			content: [{
-				type: 'component',
-				componentName: 'project',
-				componentState: {
-					id: 'project-tree',
-					text: ''
-				},
-				isClosable: false,
-				width: 20
-			}, {
-				type: 'stack',
-				content: [{
-					type: 'component',
-					componentName: 'editor',
-					componentState: {
-						id: 'Editor1',
-						text: '% Editor 1'
-					}
-				}]
-			}]
-		}, {
+const components = {
+	projectTree: () => {
+		return {
+			title: 'Project Tree',
+			type: 'component',
+			componentName: 'project-tree',
+			componentState: {
+				id: 'project-tree'
+			},
+			isClosable: false
+		}
+	},
+	projectFiles: () => {
+		return {
+			title: 'Project Files',
+			type: 'component',
+			componentName: 'project-files',
+			componentState: {
+				id: 'project-files'
+			},
+			isClosable: false
+		}
+	},
+	editor: (id) => {
+		return {
+			title: 'Editor ' + id,
+			type: 'component',
+			componentName: 'editor',
+			componentState: {
+				id: 'Editor' + id,
+				text: '% Editor ' + id
+			}
+		}
+	},
+	logView: () =>  {
+		return {
 			title: "Message Log",
 			type: 'component',
-			componentName: 'logView',
+			componentName: 'log-view',
 			componentState: {
 				id: 'ConsoleLog',
 				text: '[INFO] LOG START'
 			},
-			isClosable: false
+			isClosable: false,
+			height: 40
+		}
+	}
+};
+
+let config = {
+	content: [{
+		type: 'row',
+		content: [{
+			type: 'column',
+			width: 20,
+			content: [
+				components.projectTree(),
+				components.projectFiles(),
+			]
+		}, {
+			type: 'column',
+			content: [
+				{
+					type: 'stack',
+					content: [
+						components.editor(1),
+						components.editor(2),
+						components.editor(3)
+					]
+				},
+				components.logView()
+			]
 		}]
 	}]
 };
@@ -135,9 +173,9 @@ myLayout.registerComponent('editor', function (container, state) {
 	});
 });
 
-myLayout.registerComponent('logView', function (container, state) {
+myLayout.registerComponent('log-view', function (container, state) {
 	container.getElement()
-		.html('<div id=' + state.id + ' class=editor>' + state.text + '</div>');
+		.html(`<div id=${state.id} class=editor>${state.text}</div>`);
 	container.on('open', () => {
 		let editor = Ace.edit(state.id);
 		editor.setTheme(theme_crimson);
@@ -147,19 +185,35 @@ myLayout.registerComponent('logView', function (container, state) {
 	});
 });
 
-myLayout.registerComponent('project', function (container, state) {
+myLayout.registerComponent('project-tree', function (container, state) {
 	container.getElement()
-		.html('<div id="tree"></div>');
+		.html(`<div id="${state.id}" class="project"></div>`);
 	container.on('open', () => {
-		let tree = $("#tree");
+		let tree = $(`#${state.id}`);
 		tree.fancytree({
 			// checkbox: true,
 			source: [],
 			activate: function (event, data) {
-				$("#status").text('Activate: ' + data.node);
+				LOG.info(data)
 			}
 		});
-		fileTree = tree.fancytree("getTree");
+		projectTree = tree.fancytree("getTree");
+	});
+});
+
+myLayout.registerComponent('project-files', function (container, state) {
+	container.getElement()
+		.html(`<div id="${state.id}" class="project"></div>`);
+	container.on('open', () => {
+		let tree = $(`#${state.id}`);
+		tree.fancytree({
+			// checkbox: true,
+			source: [],
+			activate: function (event, data) {
+				LOG.info(data)
+			}
+		});
+		projectFiles = tree.fancytree("getTree");
 	});
 });
 
@@ -175,13 +229,64 @@ $("#openFile").on('change', function () {
 		data: file.path,
 		success: response => {
 			// LOG.info(response);
-			fileTree.reload(JSON.parse(response));
+			projectTree.reload(JSON.parse(response));
 		},
 		error: response => {
 			LOG.error(response);
 		}
 	})
 });
+
+function projectFilesToNodes(files) {
+
+	let scripts = [];
+	let lexiconsR = [];
+	let lexiconsW = [];
+	let model = [];
+
+	for (let i = 0; i < files.length; i++) {
+		let file = files[i];
+
+		let type = file.fileType;
+
+		let node = {
+			key: file.filePath,
+			title: file.filePath.replace(/.*\/(.*?)$/,'$1')
+		};
+
+		if (type === 'SCRIPT') {
+			scripts.push(node);
+		} else if (type === 'LEXICON_READ') {
+			lexiconsR.push(node);
+		} else if (type === 'LEXICON_WRITE') {
+			lexiconsW.push(node);
+		} else if (type === 'MODEL') {
+			model.push(node);
+		}
+	}
+
+	return [{
+		key: 'scripts',
+		title: 'Scripts',
+		folder: true,
+		children: scripts
+	}, {
+		key: 'lexiconsR',
+		title: 'Lexicons (Read)',
+		folder: true,
+		children: lexiconsR
+	}, {
+		key: 'lexiconsW',
+		title: 'Lexicons (Write)',
+		folder: true,
+		children: lexiconsW
+	}, {
+		key: 'model',
+		title: 'Model',
+		folder: true,
+		children: model
+	}];
+}
 
 const template = [{
 	label: 'Project',
@@ -198,7 +303,14 @@ const template = [{
 						contentType: CONTENT_JSON,
 						data: paths[0],
 						success: response => {
-							fileTree.reload(JSON.parse(response));
+							let object = JSON.parse(response);
+							let files = object.projectFiles;
+
+							let filetree = object.fileTree;
+							let projectNodes = projectFilesToNodes(files);
+
+							projectTree.reload(filetree);
+							projectFiles.reload(projectNodes);
 						},
 						error: response => {
 							LOG.error(response);
@@ -228,7 +340,6 @@ const template = [{
 		{role: 'reload'},
 		{role: 'forcereload'},
 		{role: 'toggledevtools'},
-		{type: 'separator'},
 		{type: 'separator'},
 		{role: 'togglefullscreen'}
 	]

@@ -40,6 +40,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -77,7 +78,9 @@ public class ViewController {
 			mainFile.setFileData(data);
 			mainFile.setFilePath(mainPath);
 
-			List<ProjectFile> files = scriptParser.getProjectFiles();
+			List<ProjectFile> files = new ArrayList<>();
+			files.add(mainFile);
+			files.addAll(scriptParser.getProjectFiles());
 
 			List<String> paths = files.stream()
 					.map(file -> file.getFilePath())
