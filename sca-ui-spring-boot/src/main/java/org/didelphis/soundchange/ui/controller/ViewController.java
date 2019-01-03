@@ -28,6 +28,8 @@ import org.didelphis.language.parsing.ParseException;
 import org.didelphis.language.phonetic.features.FeatureType;
 import org.didelphis.language.phonetic.features.IntegerFeature;
 import org.didelphis.soundchange.ErrorLogger;
+import org.didelphis.soundchange.parser.FileType;
+import org.didelphis.soundchange.parser.ProjectFile;
 import org.didelphis.soundchange.parser.ScriptParser;
 import org.didelphis.soundchange.ui.FileTreeUtil;
 import org.didelphis.utilities.Logger;
@@ -38,7 +40,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
-import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 public class ViewController {
@@ -66,10 +71,25 @@ public class ViewController {
 					errorLogger
 			);
 			scriptParser.parse();
-			Collection<String> paths = scriptParser.getPaths();
-			paths.add(mainPath);
+
+			ProjectFile mainFile = new ProjectFile();
+			mainFile.setFileType(FileType.SCRIPT);
+			mainFile.setFileData(data);
+			mainFile.setFilePath(mainPath);
+
+			List<ProjectFile> files = scriptParser.getProjectFiles();
+
+			List<String> paths = files.stream()
+					.map(file -> file.getFilePath())
+					.collect(Collectors.toList());
+
 			FileTreeUtil.Node node = FileTreeUtil.parsePaths(paths);
-			return OBJECT_MAPPER.writeValueAsString(node);
+
+			Map<String, Object> map = new HashMap<>();
+			map.put("fileTree", node);
+			map.put("projectFiles", files);
+
+			return OBJECT_MAPPER.writeValueAsString(map);
 		} catch (IOException e) {
 			LOG.error("Failed to read from {}", mainPath, e);
 		} catch (ParseException e) {
