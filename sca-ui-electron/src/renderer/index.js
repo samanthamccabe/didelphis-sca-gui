@@ -18,12 +18,18 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.     *
  ******************************************************************************/
 
+
+// non-constant globals --------------------------------------------------------
 let logView      = null;
 let projectTree  = null;
 let projectFiles = null;
 
-// Load electron classes -------------------------------------------------------
+// mutable globals -------------------------------------------------------------
+// maintain references to ace editor and fancytree objects
+const editors  = {};
+const lexicons = {};
 
+// Load electron classes -------------------------------------------------------
 const {remote} = require('electron');
 
 const {Menu, dialog} = remote;
@@ -43,149 +49,66 @@ const GoldenLayout = require("golden-layout");
 const Ace = require('ace-builds/src-noconflict/ace');
 
 Ace.config.set('basePath', '../node_modules/ace-builds/src-noconflict');
+Ace.config.set('modePath', './modes');
+
+// Import local objects --------------------------------------------------------
+const config = require('./components/layout-config');
+const Logger = require('./components/Logger');
+const Editor = require('./components/Editor');
 
 const theme_crimson = 'ace/theme/crimson_editor';
-const mode_javascript = 'ace/mode/javascript';
-
-const editors = {};
 
 const CONTENT_JSON = 'application/json; charset=UTF-8';
 
 const ENDPOINT = 'http://localhost:8080';
 
-const LOG = {
-	info: (message) => {
-		if (logView) {
-			let value = logView.getValue();
-			value += '[INFO] ' + message;
-			logView.setValue(value);
-		} else {
-			console.log('[INFO] UI Console unavailable --- ', message);
-		}
-	},
-	warn: (message) => {
-		if (logView) {
-			let value = logView.getValue();
-			value += '[WARN] ' + message;
-			logView.setValue(value);
-		} else {
-			console.log('[WARN] UI Console unavailable --- ', message);
-		}
-	},
-	error: (message) => {
-		if (logView) {
-			let value = logView.getValue();
-			value += '[ERROR] ' + message;
-			logView.setValue(value);
-		} else {
-			console.log('[ERROR] UI Console unavailable --- ', message);
-		}
-	}
-};
+const LOG = new Logger(logView);
 
-const components = {
-	projectTree: () => {
-		return {
-			title: 'Project Tree',
-			type: 'component',
-			componentName: 'project-tree',
-			componentState: {
-				id: 'project-tree'
-			},
-			isClosable: false
-		}
-	},
-	projectFiles: () => {
-		return {
-			title: 'Project Files',
-			type: 'component',
-			componentName: 'project-files',
-			componentState: {
-				id: 'project-files'
-			},
-			isClosable: false
-		}
-	},
-	editor: (id) => {
-		return {
-			title: 'Editor ' + id,
-			type: 'component',
-			componentName: 'editor',
-			componentState: {
-				id: 'Editor' + id,
-				text: '% Editor ' + id
-			}
-		}
-	},
-	logView: () =>  {
-		return {
-			title: "Message Log",
-			type: 'component',
-			componentName: 'log-view',
-			componentState: {
-				id: 'ConsoleLog',
-				text: '[INFO] LOG START'
-			},
-			isClosable: false,
-			height: 40
-		}
-	}
-};
+let layout = new GoldenLayout(config);
 
-let config = {
-	content: [{
-		type: 'row',
-		content: [{
-			type: 'column',
-			width: 20,
-			content: [
-				components.projectTree(),
-				components.projectFiles(),
-			]
-		}, {
-			type: 'column',
-			content: [
-				{
-					type: 'stack',
-					content: [
-						components.editor(1),
-						components.editor(2),
-						components.editor(3)
-					]
-				},
-				components.logView()
-			]
-		}]
-	}]
-};
+layout.registerComponent('editor', function (container, state) {
+	container.getElement()
+		.html('<div id=' + state.id + ' class=editor>' + state.text + '</div>');
+	container.on('open', () => {
 
-let myLayout = new GoldenLayout(config);
+		let element = container.getElement().children(`#${state.id}`).get(0);
 
-myLayout.registerComponent('editor', function (container, state) {
+		let options = {
+			mode: 'ace/mode/sca',
+			theme: theme_crimson
+		};
+
+		const editor = Ace.edit(element);
+
+		editors[state.id] = new Editor(state.id, container, editor, options);
+	});
+});
+
+layout.registerComponent('lexicon', function (container, state) {
 	container.getElement()
 		.html('<div id=' + state.id + ' class=editor>' + state.text + '</div>');
 	container.on('open', () => {
 		let editor = Ace.edit(state.id);
 		editor.setTheme(theme_crimson);
-		editor.session.setMode(mode_javascript);
 		container.editor = editor;
 		editors[state.id] = editor;
 	});
 });
 
-myLayout.registerComponent('log-view', function (container, state) {
+layout.registerComponent('log-view', function (container, state) {
 	container.getElement()
 		.html(`<div id=${state.id} class=editor>${state.text}</div>`);
 	container.on('open', () => {
 		let editor = Ace.edit(state.id);
 		editor.setTheme(theme_crimson);
-		editor.session.setMode(mode_javascript);
+		editor.session.setMode('ace/mode/log');
 		container.editor = editor;
 		logView = editor;
+		LOG.setLogView(logView);
 	});
 });
 
-myLayout.registerComponent('project-tree', function (container, state) {
+layout.registerComponent('project-tree', function (container, state) {
 	container.getElement()
 		.html(`<div id="${state.id}" class="project"></div>`);
 	container.on('open', () => {
@@ -201,7 +124,7 @@ myLayout.registerComponent('project-tree', function (container, state) {
 	});
 });
 
-myLayout.registerComponent('project-files', function (container, state) {
+layout.registerComponent('project-files', function (container, state) {
 	container.getElement()
 		.html(`<div id="${state.id}" class="project"></div>`);
 	container.on('open', () => {
@@ -217,7 +140,7 @@ myLayout.registerComponent('project-files', function (container, state) {
 	});
 });
 
-myLayout.init();
+layout.init();
 
 $("#openFile").on('change', function () {
 	let file = this.files[0];
@@ -228,7 +151,6 @@ $("#openFile").on('change', function () {
 		contentType: CONTENT_JSON,
 		data: file.path,
 		success: response => {
-			// LOG.info(response);
 			projectTree.reload(JSON.parse(response));
 		},
 		error: response => {
@@ -236,6 +158,14 @@ $("#openFile").on('change', function () {
 		}
 	})
 });
+
+function trimPath(path) {
+	return path.replace(/.*\/(.*?)$/,'$1');
+}
+
+function normPath(path) {
+	return path.replace(/\W+/g,'-');
+}
 
 function projectFilesToNodes(files) {
 
@@ -251,7 +181,7 @@ function projectFilesToNodes(files) {
 
 		let node = {
 			key: file.filePath,
-			title: file.filePath.replace(/.*\/(.*?)$/,'$1')
+			title: trimPath(file.filePath)
 		};
 
 		if (type === 'SCRIPT') {
@@ -288,37 +218,71 @@ function projectFilesToNodes(files) {
 	}];
 }
 
+function openProject() {
+	dialog.showOpenDialog({
+		multiSelections: false
+	}, paths => {
+		$.ajax({
+			url: ENDPOINT + '/loadNewProject',
+			method: 'POST',
+			contentType: CONTENT_JSON,
+			data: paths[0],
+			success: response => {
+				let object = JSON.parse(response);
+				let files = object.projectFiles;
+
+				let filetree = object.fileTree;
+				let projectNodes = projectFilesToNodes(files);
+
+				projectTree.reload(filetree);
+				projectFiles.reload(projectNodes);
+				
+				// Clear and reload editor panes
+				// TODO: remove all open editors here
+
+				let items = layout.root.getItemsById('editors');
+				if ((items.length < 1)) {
+					LOG.error('Unable to locate editor pane.')
+				} else {
+					// TODO: add new editors here
+					let contentItem = items[0];
+
+					for (const file of files) {
+						const fileType = file.fileType;
+						const filePath = file.filePath;
+						const fileData = file.fileData;
+
+						// TODO: filter on fileType
+
+						const id = fileType + '-' + normPath(filePath);
+
+						contentItem.addChild({
+							title: trimPath(filePath),
+							type: 'component',
+							componentName: 'editor',
+							componentState: {
+								id: id,
+								text: fileData,
+							}
+						});
+					}
+				}
+			},
+			error: response => {
+				LOG.error(response);
+			}
+		})
+	});
+}
+
 const template = [{
 	label: 'Project',
-	submenu: [
-		{
-			label: 'Open',
-			click() {
-				dialog.showOpenDialog({
-					multiSelections: false
-				}, paths => {
-					$.ajax({
-						url: ENDPOINT + '/loadNewProject',
-						method: 'POST',
-						contentType: CONTENT_JSON,
-						data: paths[0],
-						success: response => {
-							let object = JSON.parse(response);
-							let files = object.projectFiles;
-
-							let filetree = object.fileTree;
-							let projectNodes = projectFilesToNodes(files);
-
-							projectTree.reload(filetree);
-							projectFiles.reload(projectNodes);
-						},
-						error: response => {
-							LOG.error(response);
-						}
-					})
-				});
-			}
-		},
+	submenu: [{
+		label: 'Open',
+		click() {
+			openProject();
+		}
+	},
 		{role: 'quit'}
 	]
 }, {
@@ -349,14 +313,6 @@ const template = [{
 		{role: 'minimize'},
 		{role: 'close'}
 	]
-}, {
-	role: 'help',
-	submenu: [{
-		label: 'Learn More',
-		click() {
-
-		}
-	}]
 }];
 
 const menu = Menu.buildFromTemplate(template);
