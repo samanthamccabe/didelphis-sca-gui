@@ -18,12 +18,20 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.     *
  ******************************************************************************/
 
+
+// non-constant globals --------------------------------------------------------
 let logView      = null;
 let projectTree  = null;
 let projectFiles = null;
 
-// Load electron classes -------------------------------------------------------
+// mutable globals -------------------------------------------------------------
+const editors  = {};
+const lexicons = {};
+/* Variables above maintain references to ace editor and fancytree objects    */
 
+
+
+// Load electron classes -------------------------------------------------------
 const {remote} = require('electron');
 
 const {Menu, dialog} = remote;
@@ -44,44 +52,17 @@ const Ace = require('ace-builds/src-noconflict/ace');
 
 Ace.config.set('basePath', '../node_modules/ace-builds/src-noconflict');
 
+// Import local objects
+const Logger = require('./log');
+
 const theme_crimson = 'ace/theme/crimson_editor';
 const mode_javascript = 'ace/mode/javascript';
-
-const editors = {};
 
 const CONTENT_JSON = 'application/json; charset=UTF-8';
 
 const ENDPOINT = 'http://localhost:8080';
 
-const LOG = {
-	info: (message) => {
-		if (logView) {
-			let value = logView.getValue();
-			value += '[INFO] ' + message;
-			logView.setValue(value);
-		} else {
-			console.log('[INFO] UI Console unavailable --- ', message);
-		}
-	},
-	warn: (message) => {
-		if (logView) {
-			let value = logView.getValue();
-			value += '[WARN] ' + message;
-			logView.setValue(value);
-		} else {
-			console.log('[WARN] UI Console unavailable --- ', message);
-		}
-	},
-	error: (message) => {
-		if (logView) {
-			let value = logView.getValue();
-			value += '[ERROR] ' + message;
-			logView.setValue(value);
-		} else {
-			console.log('[ERROR] UI Console unavailable --- ', message);
-		}
-	}
-};
+const LOG = new Logger(logView);
 
 const components = {
 	projectTree: () => {
@@ -129,6 +110,17 @@ const components = {
 			isClosable: false,
 			height: 40
 		}
+	},
+	lexicon: (name, data) => {
+		return {
+			title: name,
+			type: 'component',
+			componentName: 'lexicon',
+			componentState: {
+				id: 'Lexicon' + name,
+				text: data
+			}
+		}
 	}
 };
 
@@ -146,6 +138,8 @@ let config = {
 			type: 'column',
 			content: [
 				{
+					id: 'main',
+					isClosable: false,
 					type: 'stack',
 					content: [
 						components.editor(1),
@@ -173,6 +167,18 @@ myLayout.registerComponent('editor', function (container, state) {
 	});
 });
 
+myLayout.registerComponent('lexicon', function (container, state) {
+	container.getElement()
+		.html('<div id=' + state.id + ' class=editor>' + state.text + '</div>');
+	container.on('open', () => {
+		let editor = Ace.edit(state.id);
+		editor.setTheme(theme_crimson);
+		// editor.session.setMode(mode_javascript);
+		container.editor = editor;
+		editors[state.id] = editor;
+	});
+});
+
 myLayout.registerComponent('log-view', function (container, state) {
 	container.getElement()
 		.html(`<div id=${state.id} class=editor>${state.text}</div>`);
@@ -182,6 +188,7 @@ myLayout.registerComponent('log-view', function (container, state) {
 		editor.session.setMode(mode_javascript);
 		container.editor = editor;
 		logView = editor;
+		LOG.setLogView(logView);
 	});
 });
 
@@ -228,7 +235,6 @@ $("#openFile").on('change', function () {
 		contentType: CONTENT_JSON,
 		data: file.path,
 		success: response => {
-			// LOG.info(response);
 			projectTree.reload(JSON.parse(response));
 		},
 		error: response => {
@@ -288,37 +294,50 @@ function projectFilesToNodes(files) {
 	}];
 }
 
+function openProject() {
+	dialog.showOpenDialog({
+		multiSelections: false
+	}, paths => {
+		$.ajax({
+			url: ENDPOINT + '/loadNewProject',
+			method: 'POST',
+			contentType: CONTENT_JSON,
+			data: paths[0],
+			success: response => {
+				let object = JSON.parse(response);
+				let files = object.projectFiles;
+
+				let filetree = object.fileTree;
+				let projectNodes = projectFilesToNodes(files);
+
+				projectTree.reload(filetree);
+				projectFiles.reload(projectNodes);
+				
+				// Clear and reload editor panes
+				let items = layout.root.getItemsById('main');
+				if ((items.length === 1)) {
+					let contentItem = items[0];
+					
+				} else {
+					LOG.error('Tried to load the main editor pane but found ' +
+						items.length + ' instances')
+				}
+			},
+			error: response => {
+				LOG.error(response);
+			}
+		})
+	});
+}
+
 const template = [{
 	label: 'Project',
-	submenu: [
-		{
-			label: 'Open',
-			click() {
-				dialog.showOpenDialog({
-					multiSelections: false
-				}, paths => {
-					$.ajax({
-						url: ENDPOINT + '/loadNewProject',
-						method: 'POST',
-						contentType: CONTENT_JSON,
-						data: paths[0],
-						success: response => {
-							let object = JSON.parse(response);
-							let files = object.projectFiles;
-
-							let filetree = object.fileTree;
-							let projectNodes = projectFilesToNodes(files);
-
-							projectTree.reload(filetree);
-							projectFiles.reload(projectNodes);
-						},
-						error: response => {
-							LOG.error(response);
-						}
-					})
-				});
-			}
-		},
+	submenu: [{
+		label: 'Open',
+		click() {
+			openProject();
+		}
+	},
 		{role: 'quit'}
 	]
 }, {
@@ -349,14 +368,6 @@ const template = [{
 		{role: 'minimize'},
 		{role: 'close'}
 	]
-}, {
-	role: 'help',
-	submenu: [{
-		label: 'Learn More',
-		click() {
-
-		}
-	}]
 }];
 
 const menu = Menu.buildFromTemplate(template);
