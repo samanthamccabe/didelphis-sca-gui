@@ -68,8 +68,8 @@ ul.fancytree-container {
   white-space: nowrap;
   padding: 3px;
   margin: 0;
-  background-color: white;
-  border: 1px dotted gray;
+  /*background-color: white;*/
+  /*border: 1px dotted gray;*/
   min-height: 0%;
   position: relative;
 }
@@ -363,7 +363,7 @@ span.fancytree-node {
   min-height: 16px;
 }
 span.fancytree-title {
-  color: black;
+  /*color: black;*/
   cursor: pointer;
   display: inline-block;
   vertical-align: top;

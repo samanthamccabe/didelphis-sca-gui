@@ -8,11 +8,14 @@ module.exports = class Editor {
 			if (options.mode) {
 				editor.session.setMode(options.mode);
 			}
-
 			if (options.theme) {
 				editor.setTheme(options.theme);
 			}
-
 		}
+	}
+
+	destroy() {
+		this.editor.destroy();
+		this.container.close();
 	}
 };

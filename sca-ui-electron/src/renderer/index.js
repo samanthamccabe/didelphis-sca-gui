@@ -26,8 +26,8 @@ let projectFiles = null;
 
 // mutable globals -------------------------------------------------------------
 // maintain references to ace editor and fancytree objects
-const editors  = {};
-const lexicons = {};
+const editors  = new Map();
+const lexicons = new Map();
 
 // Load electron classes -------------------------------------------------------
 const {remote} = require('electron');
@@ -47,7 +47,6 @@ require('jquery.fancytree');
 const GoldenLayout = require("golden-layout");
 
 const Ace = require('ace-builds/src-noconflict/ace');
-
 Ace.config.set('basePath', '../node_modules/ace-builds/src-noconflict');
 Ace.config.set('modePath', './modes');
 
@@ -56,7 +55,7 @@ const config = require('./components/layout-config');
 const Logger = require('./components/Logger');
 const Editor = require('./components/Editor');
 
-const theme_crimson = 'ace/theme/crimson_editor';
+const theme_default = 'ace/theme/chaos';
 
 const CONTENT_JSON = 'application/json; charset=UTF-8';
 
@@ -68,30 +67,31 @@ let layout = new GoldenLayout(config);
 
 layout.registerComponent('editor', function (container, state) {
 	container.getElement()
-		.html('<div id=' + state.id + ' class=editor>' + state.text + '</div>');
+		.html(`<div id=${state.id} class=editor>${state.text}</div>`);
 	container.on('open', () => {
-
-		let element = container.getElement().children(`#${state.id}`).get(0);
-
+		let id = state.id;
+		let element = container.getElement().children(`#${id}`).get(0);
 		let options = {
 			mode: 'ace/mode/sca',
-			theme: theme_crimson
+			theme: theme_default
 		};
-
 		const editor = Ace.edit(element);
-
-		editors[state.id] = new Editor(state.id, container, editor, options);
+		editors.set(id, new Editor(id, container, editor, options));
 	});
 });
 
 layout.registerComponent('lexicon', function (container, state) {
 	container.getElement()
-		.html('<div id=' + state.id + ' class=editor>' + state.text + '</div>');
+		.html(`<div id=${state.id} class=editor>${state.text}</div>`);
 	container.on('open', () => {
-		let editor = Ace.edit(state.id);
-		editor.setTheme(theme_crimson);
-		container.editor = editor;
-		editors[state.id] = editor;
+		let id = state.id;
+		let element = container.getElement().children(`#${id}`).get(0);
+		let options = {
+			mode: 'ace/mode/text',
+			theme: theme_default
+		};
+		const editor = Ace.edit(element);
+		lexicons.set(id, new Editor(id, container, editor, options));
 	});
 });
 
@@ -100,7 +100,7 @@ layout.registerComponent('log-view', function (container, state) {
 		.html(`<div id=${state.id} class=editor>${state.text}</div>`);
 	container.on('open', () => {
 		let editor = Ace.edit(state.id);
-		editor.setTheme(theme_crimson);
+		editor.setTheme(theme_default);
 		editor.session.setMode('ace/mode/log');
 		container.editor = editor;
 		logView = editor;
@@ -218,6 +218,78 @@ function projectFilesToNodes(files) {
 	}];
 }
 
+/**
+ * Creates new editor panels from an array of project files
+ * @param files an array of project files returned by the server
+ */
+function createPanels(files) {
+	let items = layout.root.getItemsById('editors');
+	if ((items.length < 1)) {
+		LOG.error('Unable to locate editor pane.')
+	} else {
+		const editorConfigs   = [];
+		const lexiconRConfigs = [];
+		const lexiconWConfigs = [];
+
+		let contentItem = items[0];
+		for (const file of files) {
+			const fileType = file.fileType;
+			const filePath = file.filePath;
+			const fileData = file.fileData;
+
+			const id = fileType + '-' + normPath(filePath);
+
+			if (fileType === 'SCRIPT') {
+				editorConfigs.push({
+					title: trimPath(filePath),
+					type: 'component',
+					componentName: 'editor',
+					componentState: {
+						id: id,
+						text: fileData,
+					}
+				});
+			} else if (fileType === 'LEXICON_READ') {
+				lexiconRConfigs.push({
+					title: trimPath(filePath),
+					type: 'component',
+					componentName: 'lexicon',
+					componentState: {
+						id: id,
+						text: fileData,
+					}
+				});
+			} else if (fileType === 'LEXICON_WRITE') {
+				lexiconWConfigs.push({
+					title: trimPath(filePath),
+					type: 'component',
+					componentName: 'lexicon',
+					componentState: {
+						id: id,
+						text: fileData,
+					}
+				});
+			} else if (fileType === 'MODEL') {
+				// TODO:
+			}
+		}
+
+		contentItem.addChild({
+			type: 'row',
+			content: [{
+				type: 'stack',
+				content: editorConfigs
+			}, {
+				type: 'stack',
+				content: lexiconRConfigs
+			}, {
+				type: 'stack',
+				content: lexiconWConfigs
+			}]
+		});
+	}
+}
+
 function openProject() {
 	dialog.showOpenDialog({
 		multiSelections: false
@@ -234,39 +306,23 @@ function openProject() {
 				let filetree = object.fileTree;
 				let projectNodes = projectFilesToNodes(files);
 
+				// Reload the project structure --------------------------------
 				projectTree.reload(filetree);
 				projectFiles.reload(projectNodes);
 				
-				// Clear and reload editor panes
-				// TODO: remove all open editors here
-
-				let items = layout.root.getItemsById('editors');
-				if ((items.length < 1)) {
-					LOG.error('Unable to locate editor pane.')
-				} else {
-					// TODO: add new editors here
-					let contentItem = items[0];
-
-					for (const file of files) {
-						const fileType = file.fileType;
-						const filePath = file.filePath;
-						const fileData = file.fileData;
-
-						// TODO: filter on fileType
-
-						const id = fileType + '-' + normPath(filePath);
-
-						contentItem.addChild({
-							title: trimPath(filePath),
-							type: 'component',
-							componentName: 'editor',
-							componentState: {
-								id: id,
-								text: fileData,
-							}
-						});
-					}
+				// Clear and reload editor panes -------------------------------
+				for (const lexicon of lexicons.values()) {
+					lexicon.destroy();
 				}
+				lexicons.clear();
+
+				for (const editor of editors.values()) {
+					editor.destroy();
+				}
+				editors.clear();
+
+				// Populate the new editors ------------------------------------
+				createPanels(files);
 			},
 			error: response => {
 				LOG.error(response);
