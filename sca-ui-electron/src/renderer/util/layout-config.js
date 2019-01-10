@@ -32,7 +32,7 @@ const components = {
 			}
 		}
 	},
-	logView: () => {
+	logView: (height) => {
 		return {
 			title: "Message Log",
 			type: 'component',
@@ -42,7 +42,7 @@ const components = {
 				text: '[INFO] LOG START\n'
 			},
 			isClosable: false,
-			height: 40
+			height: height
 		}
 	},
 	lexicon: (name, data) => {
@@ -59,6 +59,24 @@ const components = {
 };
 
 module.exports = {
+	settings:{
+		hasHeaders: true,
+		constrainDragToContainer: true,
+		reorderEnabled: true,
+		selectionEnabled: false,
+		popoutWholeStack: false,
+		blockedPopoutsThrowError: false,
+		closePopoutsOnUnload: true,
+		showPopoutIcon: false,
+		showMaximiseIcon: true,
+		showCloseIcon: false
+	},
+	labels: {
+		close: 'close',
+		maximise: 'maximise',
+		minimise: 'minimise',
+		popout: 'open in new window'
+	},
 	content: [{
 		type: 'row',
 		content: [{
@@ -79,7 +97,7 @@ module.exports = {
 					type: 'row',
 					content: []
 				},
-				components.logView()
+				components.logView(20)
 			]
 		}]
 	}]

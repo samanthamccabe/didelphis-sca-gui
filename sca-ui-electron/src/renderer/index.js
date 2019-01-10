@@ -51,17 +51,20 @@ Ace.config.set('basePath', '../node_modules/ace-builds/src-noconflict');
 Ace.config.set('modePath', './modes');
 
 // Import local objects --------------------------------------------------------
-const config = require('./components/layout-config');
 const Logger = require('./components/Logger');
 const Editor = require('./components/Editor');
+const Server = require('./util/Server');
+const util   = require('./util/Util');
+const config = require('./util/layout-config');
 
+
+// -----------------------------------------------------------------------------
 const theme_default = 'ace/theme/chaos';
-
-const CONTENT_JSON = 'application/json; charset=UTF-8';
 
 const ENDPOINT = 'http://localhost:8080';
 
 const LOG = new Logger(logView);
+const SERVER = new Server(ENDPOINT);
 
 let layout = new GoldenLayout(config);
 
@@ -71,12 +74,22 @@ layout.registerComponent('editor', function (container, state) {
 	container.on('open', () => {
 		let id = state.id;
 		let element = container.getElement().children(`#${id}`).get(0);
-		let options = {
-			mode: 'ace/mode/sca',
-			theme: theme_default
-		};
+
 		const editor = Ace.edit(element);
-		editors.set(id, new Editor(id, container, editor, options));
+
+		if (editors.has(id)) {
+			editors.get(id).restore(editor);
+		} else {
+			let options = {
+				mode: 'ace/mode/sca',
+				theme: theme_default
+			};
+			editors.set(id, new Editor(container, editor, options));
+		}
+	});
+
+	container.on('close', () => {
+		// TODO:
 	});
 });
 
@@ -91,7 +104,7 @@ layout.registerComponent('lexicon', function (container, state) {
 			theme: theme_default
 		};
 		const editor = Ace.edit(element);
-		lexicons.set(id, new Editor(id, container, editor, options));
+		lexicons.set(id, new Editor(container, editor, options));
 	});
 });
 
@@ -117,7 +130,7 @@ layout.registerComponent('project-tree', function (container, state) {
 			// checkbox: true,
 			source: [],
 			activate: function (event, data) {
-				LOG.info(data)
+				LOG.info(JSON.stringify(data));
 			}
 		});
 		projectTree = tree.fancytree("getTree");
@@ -133,7 +146,7 @@ layout.registerComponent('project-files', function (container, state) {
 			// checkbox: true,
 			source: [],
 			activate: function (event, data) {
-				LOG.info(data)
+				LOG.info(JSON.stringify(data));
 			}
 		});
 		projectFiles = tree.fancytree("getTree");
@@ -142,37 +155,12 @@ layout.registerComponent('project-files', function (container, state) {
 
 layout.init();
 
-$("#openFile").on('change', function () {
-	let file = this.files[0];
-
-	$.ajax({
-		url: ENDPOINT + '/loadNewProject',
-		method: 'POST',
-		contentType: CONTENT_JSON,
-		data: file.path,
-		success: response => {
-			projectTree.reload(JSON.parse(response));
-		},
-		error: response => {
-			LOG.error(response);
-		}
-	})
-});
-
-function trimPath(path) {
-	return path.replace(/.*\/(.*?)$/,'$1');
-}
-
-function normPath(path) {
-	return path.replace(/\W+/g,'-');
-}
-
 function projectFilesToNodes(files) {
 
-	let scripts = [];
+	let scripts   = [];
 	let lexiconsR = [];
 	let lexiconsW = [];
-	let model = [];
+	let model     = [];
 
 	for (let i = 0; i < files.length; i++) {
 		let file = files[i];
@@ -180,18 +168,23 @@ function projectFilesToNodes(files) {
 		let type = file.fileType;
 
 		let node = {
-			key: file.filePath,
-			title: trimPath(file.filePath)
+			key:   util.normPath(file.filePath),
+			title: util.trimPath(file.filePath)
 		};
 
-		if (type === 'SCRIPT') {
-			scripts.push(node);
-		} else if (type === 'LEXICON_READ') {
-			lexiconsR.push(node);
-		} else if (type === 'LEXICON_WRITE') {
-			lexiconsW.push(node);
-		} else if (type === 'MODEL') {
-			model.push(node);
+		switch (type) {
+			case 'SCRIPT':
+				scripts.push(node);
+				break;
+			case 'LEXICON_READ':
+				lexiconsR.push(node);
+				break;
+			case 'LEXICON_WRITE':
+				lexiconsW.push(node);
+				break;
+			case 'MODEL':
+				model.push(node);
+				break;
 		}
 	}
 
@@ -228,6 +221,7 @@ function createPanels(files) {
 		LOG.error('Unable to locate editor pane.')
 	} else {
 		const editorConfigs   = [];
+		const modelConfigs    = [];
 		const lexiconRConfigs = [];
 		const lexiconWConfigs = [];
 
@@ -237,11 +231,12 @@ function createPanels(files) {
 			const filePath = file.filePath;
 			const fileData = file.fileData;
 
-			const id = fileType + '-' + normPath(filePath);
+			const id = util.normPath(filePath);
 
 			if (fileType === 'SCRIPT') {
 				editorConfigs.push({
-					title: trimPath(filePath),
+					isClosable: false,
+					title: util.trimPath(filePath),
 					type: 'component',
 					componentName: 'editor',
 					componentState: {
@@ -251,7 +246,8 @@ function createPanels(files) {
 				});
 			} else if (fileType === 'LEXICON_READ') {
 				lexiconRConfigs.push({
-					title: trimPath(filePath),
+					isClosable: false,
+					title: util.trimPath(filePath),
 					type: 'component',
 					componentName: 'lexicon',
 					componentState: {
@@ -261,7 +257,8 @@ function createPanels(files) {
 				});
 			} else if (fileType === 'LEXICON_WRITE') {
 				lexiconWConfigs.push({
-					title: trimPath(filePath),
+					isClosable: false,
+					title: util.trimPath(filePath),
 					type: 'component',
 					componentName: 'lexicon',
 					componentState: {
@@ -270,7 +267,17 @@ function createPanels(files) {
 					}
 				});
 			} else if (fileType === 'MODEL') {
-				// TODO:
+				modelConfigs.push({
+					isClosable: false,
+					title: util.trimPath(filePath),
+					type: 'component',
+					componentName: 'editor',
+					// TODO: assign the correct mode
+					componentState: {
+						id: id,
+						text: fileData,
+					}
+				});
 			}
 		}
 
@@ -290,55 +297,49 @@ function createPanels(files) {
 	}
 }
 
-function openProject() {
-	dialog.showOpenDialog({
-		multiSelections: false
-	}, paths => {
-		$.ajax({
-			url: ENDPOINT + '/loadNewProject',
-			method: 'POST',
-			contentType: CONTENT_JSON,
-			data: paths[0],
-			success: response => {
-				let object = JSON.parse(response);
-				let files = object.projectFiles;
+/**
+ * Updates the UI state for a new project
+ * @param projectJSON project data returned from the server
+ */
+function loadNewProject(projectJSON) {
+	let object = JSON.parse(projectJSON);
+	let files = object.projectFiles;
 
-				let filetree = object.fileTree;
-				let projectNodes = projectFilesToNodes(files);
+	let filetree = object.fileTree;
+	let projectNodes = projectFilesToNodes(files);
 
-				// Reload the project structure --------------------------------
-				projectTree.reload(filetree);
-				projectFiles.reload(projectNodes);
-				
-				// Clear and reload editor panes -------------------------------
-				for (const lexicon of lexicons.values()) {
-					lexicon.destroy();
-				}
-				lexicons.clear();
+	// Reload the project structure --------------------------------------------
+	projectTree.reload(filetree);
+	projectFiles.reload(projectNodes);
 
-				for (const editor of editors.values()) {
-					editor.destroy();
-				}
-				editors.clear();
+	// Clear and reload editor panes -------------------------------------------
+	for (const lexicon of lexicons.values()) {
+		lexicon.destroy();
+	}
+	lexicons.clear();
 
-				// Populate the new editors ------------------------------------
-				createPanels(files);
-			},
-			error: response => {
-				LOG.error(response);
-			}
-		})
-	});
+	for (const editor of editors.values()) {
+		editor.destroy();
+	}
+	editors.clear();
+
+	// Populate the new editors ------------------------------------------------
+	createPanels(files);
 }
 
 const template = [{
 	label: 'Project',
-	submenu: [{
-		label: 'Open',
-		click() {
-			openProject();
-		}
-	},
+	submenu: [
+		{
+			label: 'Open',
+			click: function () {
+				dialog.showOpenDialog({
+					multiSelections: false
+				}, paths => {
+					SERVER.post('/loadNewProject', paths[0], loadNewProject);
+				});
+			}
+		},
 		{role: 'quit'}
 	]
 }, {
