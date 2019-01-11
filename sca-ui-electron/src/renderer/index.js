@@ -44,7 +44,7 @@ window.$ = $;
 require('jquery-ui');
 require('jquery.fancytree');
 
-const GoldenLayout = require("golden-layout");
+const GoldenLayout = require('golden-layout');
 
 const Ace = require('ace-builds/src-noconflict/ace');
 Ace.config.set('basePath', '../node_modules/ace-builds/src-noconflict');
@@ -57,25 +57,26 @@ const Server = require('./util/Server');
 const util   = require('./util/Util');
 const config = require('./util/layout-config');
 
-
 // -----------------------------------------------------------------------------
 const theme_default = 'ace/theme/chaos';
 
-const ENDPOINT = 'http://localhost:8080';
+const LOG    = new Logger(logView);
+const SERVER = new Server('http://localhost:8080');
 
-const LOG = new Logger(logView);
-const SERVER = new Server(ENDPOINT);
-
-let layout = new GoldenLayout(config);
+let layout = new GoldenLayout(config, $('#display'));
 
 layout.registerComponent('editor', function (container, state) {
-	container.getElement()
-		.html(`<div id=${state.id} class=editor>${state.text}</div>`);
+	let element = container.getElement();
+
+	// Create div
+	element.html(`<div id=${state.id} class='editor'>${state.text}</div>`);
+
+	// Assign Behavior
 	container.on('open', () => {
 		let id = state.id;
-		let element = container.getElement().children(`#${id}`).get(0);
+		let domElement = element.children(`#${id}`).get(0);
 
-		const editor = Ace.edit(element);
+		const editor = Ace.edit(domElement);
 
 		if (editors.has(id)) {
 			editors.get(id).restore(editor);
@@ -94,23 +95,31 @@ layout.registerComponent('editor', function (container, state) {
 });
 
 layout.registerComponent('lexicon', function (container, state) {
-	container.getElement()
-		.html(`<div id=${state.id} class=editor>${state.text}</div>`);
+	const element = container.getElement();
+
+	// Create div
+	element.html(`<div id=${state.id} class='editor'>${state.text}</div>`);
+
+	// Assign behavior
 	container.on('open', () => {
 		let id = state.id;
-		let element = container.getElement().children(`#${id}`).get(0);
+		let domElement = element.children(`#${id}`).get(0);
 		let options = {
 			mode: 'ace/mode/text',
 			theme: theme_default
 		};
-		const editor = Ace.edit(element);
+		const editor = Ace.edit(domElement);
 		lexicons.set(id, new Editor(container, editor, options));
 	});
 });
 
 layout.registerComponent('log-view', function (container, state) {
-	container.getElement()
-		.html(`<div id=${state.id} class=editor>${state.text}</div>`);
+	const element = container.getElement();
+
+	// Create div
+	element.html(`<div id=${state.id} class='editor'>${state.text}</div>`);
+
+	// Assign behavior
 	container.on('open', () => {
 		let editor = Ace.edit(state.id);
 		editor.setTheme(theme_default);
@@ -122,8 +131,7 @@ layout.registerComponent('log-view', function (container, state) {
 });
 
 layout.registerComponent('project-tree', function (container, state) {
-	container.getElement()
-		.html(`<div id="${state.id}" class="project"></div>`);
+	container.getElement().html(`<div id='${state.id}' class='project'></div>`);
 	container.on('open', () => {
 		let tree = $(`#${state.id}`);
 		tree.fancytree({
@@ -133,13 +141,13 @@ layout.registerComponent('project-tree', function (container, state) {
 				LOG.info(JSON.stringify(data));
 			}
 		});
-		projectTree = tree.fancytree("getTree");
+		projectTree = tree.fancytree('getTree');
 	});
 });
 
 layout.registerComponent('project-files', function (container, state) {
 	container.getElement()
-		.html(`<div id="${state.id}" class="project"></div>`);
+		.html(`<div id="${state.id}" class='project'></div>`);
 	container.on('open', () => {
 		let tree = $(`#${state.id}`);
 		tree.fancytree({
@@ -149,7 +157,7 @@ layout.registerComponent('project-files', function (container, state) {
 				LOG.info(JSON.stringify(data));
 			}
 		});
-		projectFiles = tree.fancytree("getTree");
+		projectFiles = tree.fancytree('getTree');
 	});
 });
 
@@ -332,12 +340,22 @@ const template = [{
 	submenu: [
 		{
 			label: 'Open',
-			click: function () {
+			click: () => {
 				dialog.showOpenDialog({
 					multiSelections: false
 				}, paths => {
 					SERVER.post('/loadNewProject', paths[0], loadNewProject);
 				});
+			}
+		}, {
+			label: 'Save',
+			click: () => {
+				// TODO
+			}
+		}, {
+			label: 'Save As',
+			click: () => {
+				dialog.showSaveDialog({}, paths => LOG.info(paths));
 			}
 		},
 		{role: 'quit'}
