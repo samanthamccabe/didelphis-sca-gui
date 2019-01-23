@@ -34,7 +34,7 @@ ace.define("ace/mode/sca_highlight_rules", ["require", "exports", "module", "ace
 				regex: /'[^']*'|"[^"]*"/
 			}, {
 				token: "constant.numeric",
-				regex: "\d+"
+				regex: /\d+/
 			}, {
 				token: "support.function",
 				regex: /mode|load|execute|import|open|write|close|break|reserve|as|or|not/i

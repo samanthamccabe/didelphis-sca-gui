@@ -48,14 +48,15 @@ const GoldenLayout = require('golden-layout');
 
 const Ace = require('ace-builds/src-noconflict/ace');
 Ace.config.set('basePath', '../node_modules/ace-builds/src-noconflict');
-Ace.config.set('modePath', './modes');
+Ace.config.set('modePath', './js/modes');
 
 // Import local objects --------------------------------------------------------
-const Logger = require('./components/Logger');
-const Editor = require('./components/Editor');
-const Server = require('./util/Server');
-const util   = require('./util/Util');
-const config = require('./util/layout-config');
+const Logger = require('./js/components/Logger');
+const Editor = require('./js/components/Editor');
+
+const Server = require('./js/util/Server');
+const util   = require('./js/util/Util');
+const config = require('./js/util/layout-config');
 
 // -----------------------------------------------------------------------------
 const theme_default = 'ace/theme/chaos';
@@ -63,103 +64,97 @@ const theme_default = 'ace/theme/chaos';
 const LOG    = new Logger(logView);
 const SERVER = new Server('http://localhost:8080');
 
-let layout = new GoldenLayout(config, $('#display'));
+let layout = new GoldenLayout(config);
 
-layout.registerComponent('editor', function (container, state) {
-	let element = container.getElement();
+(() => {
+	layout.registerComponent('editor', function (container, state) {
+		let element = container.getElement();
 
-	// Create div
-	element.html(`<div id=${state.id} class='editor'>${state.text}</div>`);
+		// Create div
+		element.html(`<div id=${state.id} class='editor'>${state.text}</div>`);
 
-	// Assign Behavior
-	container.on('open', () => {
-		let id = state.id;
-		let domElement = element.children(`#${id}`).get(0);
+		// Assign Behavior
+		container.on('open', () => {
+			let id = state.id;
+			let domElement = element.children(`#${id}`).get(0);
 
-		const editor = Ace.edit(domElement);
+			const editor = Ace.edit(domElement);
 
-		if (editors.has(id)) {
-			editors.get(id).restore(editor);
-		} else {
+			if (editors.has(id)) {
+				editors.get(id).restore(editor);
+			} else {
+				let options = {
+					mode: 'ace/mode/sca',
+					theme: theme_default
+				};
+				editors.set(id, new Editor(container, editor, options));
+			}
+		});
+	});
+	layout.registerComponent('lexicon', function (container, state) {
+		const element = container.getElement();
+
+		// Create div
+		element.html(`<div id=${state.id} class='editor'>${state.text}</div>`);
+
+		// Assign behavior
+		container.on('open', () => {
+			let id = state.id;
+			let domElement = element.children(`#${id}`).get(0);
 			let options = {
-				mode: 'ace/mode/sca',
+				mode: 'ace/mode/text',
 				theme: theme_default
 			};
-			editors.set(id, new Editor(container, editor, options));
-		}
-	});
-
-	container.on('close', () => {
-		// TODO:
-	});
-});
-
-layout.registerComponent('lexicon', function (container, state) {
-	const element = container.getElement();
-
-	// Create div
-	element.html(`<div id=${state.id} class='editor'>${state.text}</div>`);
-
-	// Assign behavior
-	container.on('open', () => {
-		let id = state.id;
-		let domElement = element.children(`#${id}`).get(0);
-		let options = {
-			mode: 'ace/mode/text',
-			theme: theme_default
-		};
-		const editor = Ace.edit(domElement);
-		lexicons.set(id, new Editor(container, editor, options));
-	});
-});
-
-layout.registerComponent('log-view', function (container, state) {
-	const element = container.getElement();
-
-	// Create div
-	element.html(`<div id=${state.id} class='editor'>${state.text}</div>`);
-
-	// Assign behavior
-	container.on('open', () => {
-		let editor = Ace.edit(state.id);
-		editor.setTheme(theme_default);
-		editor.session.setMode('ace/mode/log');
-		container.editor = editor;
-		logView = editor;
-		LOG.setLogView(logView);
-	});
-});
-
-layout.registerComponent('project-tree', function (container, state) {
-	container.getElement().html(`<div id='${state.id}' class='project'></div>`);
-	container.on('open', () => {
-		let tree = $(`#${state.id}`);
-		tree.fancytree({
-			// checkbox: true,
-			source: [],
-			activate: function (event, data) {
-				LOG.info(JSON.stringify(data));
-			}
+			const editor = Ace.edit(domElement);
+			lexicons.set(id, new Editor(container, editor, options));
 		});
-		projectTree = tree.fancytree('getTree');
 	});
-});
+	layout.registerComponent('log-view', function (container, state) {
+		const element = container.getElement();
 
-layout.registerComponent('project-files', function (container, state) {
-	container.getElement()
-		.html(`<div id="${state.id}" class='project'></div>`);
-	container.on('open', () => {
-		let tree = $(`#${state.id}`);
-		tree.fancytree({
-			// checkbox: true,
-			source: [],
-			activate: function (event, data) {
-				LOG.info(JSON.stringify(data));
-			}
+		// Create div
+		element.html(`<div id=${state.id} class='editor'>${state.text}</div>`);
+
+		// Assign behavior
+		container.on('open', () => {
+			let editor = Ace.edit(state.id);
+			editor.setTheme(theme_default);
+			editor.session.setMode('ace/mode/log');
+			container.editor = editor;
+			logView = editor;
+			LOG.setLogView(logView);
 		});
-		projectFiles = tree.fancytree('getTree');
 	});
-});
+	layout.registerComponent('project-tree', function (container, state) {
+		container.getElement().html(`<div id='${state.id}' class='project'></div>`);
+		container.on('open', () => {
+			let tree = $(`#${state.id}`);
+			tree.fancytree({
+				// checkbox: true,
+				source: [],
+				activate: function (event, data) {
+					LOG.info(JSON.stringify(data));
+				}
+			});
+			projectTree = tree.fancytree('getTree');
+		});
+	});
+	layout.registerComponent('project-files', function (container, state) {
+		container.getElement()
+			.html(`<div id="${state.id}" class='project'></div>`);
+		container.on('open', () => {
+			let tree = $(`#${state.id}`);
+			tree.fancytree({
+				// checkbox: true,
+				source: [],
+				activate: function (event, data) {
+					LOG.info(JSON.stringify(data));
+				}
+			});
+			projectFiles = tree.fancytree('getTree');
+		});
+	});
+})();
 
 layout.init();
 
@@ -231,7 +226,7 @@ function createPanels(files) {
 		const editorConfigs   = [];
 		const modelConfigs    = [];
 		const lexiconRConfigs = [];
-		const lexiconWConfigs = [];
+		// const lexiconWConfigs = [];
 
 		let contentItem = items[0];
 		for (const file of files) {
@@ -263,17 +258,17 @@ function createPanels(files) {
 						text: fileData,
 					}
 				});
-			} else if (fileType === 'LEXICON_WRITE') {
-				lexiconWConfigs.push({
-					isClosable: false,
-					title: util.trimPath(filePath),
-					type: 'component',
-					componentName: 'lexicon',
-					componentState: {
-						id: id,
-						text: fileData,
-					}
-				});
+			// } else if (fileType === 'LEXICON_WRITE') {
+			// 	lexiconWConfigs.push({
+			// 		isClosable: false,
+			// 		title: util.trimPath(filePath),
+			// 		type: 'component',
+			// 		componentName: 'lexicon',
+			// 		componentState: {
+			// 			id: id,
+			// 			text: fileData,
+			// 		}
+			// 	});
 			} else if (fileType === 'MODEL') {
 				modelConfigs.push({
 					isClosable: false,
@@ -297,9 +292,6 @@ function createPanels(files) {
 			}, {
 				type: 'stack',
 				content: lexiconRConfigs
-			}, {
-				type: 'stack',
-				content: lexiconWConfigs
 			}]
 		});
 	}
@@ -337,29 +329,37 @@ function loadNewProject(projectJSON) {
 
 const template = [{
 	label: 'Project',
-	submenu: [
-		{
-			label: 'Open',
-			click: () => {
-				dialog.showOpenDialog({
-					multiSelections: false
-				}, paths => {
-					SERVER.post('/loadNewProject', paths[0], loadNewProject);
-				});
-			}
-		}, {
-			label: 'Save',
-			click: () => {
-				// TODO
-			}
-		}, {
-			label: 'Save As',
-			click: () => {
-				dialog.showSaveDialog({}, paths => LOG.info(paths));
-			}
-		},
-		{role: 'quit'}
-	]
+	submenu: [{
+		label: 'Open',
+		click: () => {
+			dialog.showOpenDialog({
+				multiSelections: false
+			}, paths => {
+				SERVER.post('/loadNewProject', paths[0], loadNewProject);
+			});
+		}
+	}, {
+		label: 'Save',
+		click: () => {
+			// TODO
+		}
+	}, {
+		label: 'Save As',
+		click: () => {
+			dialog.showSaveDialog({}, paths => LOG.info(paths));
+		}
+	}, {
+		role: 'quit'
+	}]
+}, {
+	label: 'Run',
+	submenu: [{
+		label: 'Compile',
+		click: () => { /* TODO */}
+	}]
+}, {
+	label: 'Analyze',
+	submenu: []
 }, {
 	label: 'Edit',
 	submenu: [

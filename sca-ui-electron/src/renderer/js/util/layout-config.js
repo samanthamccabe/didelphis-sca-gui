@@ -83,7 +83,7 @@ module.exports = {
 			id: 'project',
 			isClosable: false,
 			type: 'column',
-			width: 20,
+			width: 15,
 			content: [
 				components.projectTree(),
 				components.projectFiles(),
