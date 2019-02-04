@@ -1,8 +1,11 @@
-module.exports = {
-	trimPath: (path) => {
+module.exports = class Util {
+
+	static trimPath(path) {
 		return path.replace(/.*\/(.*?)$/, '$1');
-	},
-	normPath: (path) => {
+	}
+
+	static normPath(path) {
 		return path.replace(/\W+/g, '-');
 	}
+
 };

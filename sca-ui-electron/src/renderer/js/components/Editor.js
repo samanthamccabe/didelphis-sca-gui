@@ -1,9 +1,10 @@
-module.exports = class Editor {
-	constructor(container, editor, options) {
+module.exports = class ProjectFile {
+	constructor(filePath, container, editor, options) {
 
-		this.container = container;
-		this.editor    = editor;
-		this.session   = editor.session;
+		this.filePath    = filePath;
+		this.container   = container;
+		this.aceEditor   = editor;
+		this.session     = editor.session;
 
 		if (options) {
 			if (options.mode) {
@@ -21,8 +22,8 @@ module.exports = class Editor {
 	}
 
 	restore(editor) {
-		this.editor = editor;
-		this.editor.setSession(this.session);
+		this.aceEditor = editor;
+		this.aceEditor.setSession(this.session);
 	}
 
 	setContainer(container) {
@@ -34,7 +35,7 @@ module.exports = class Editor {
 	}
 
 	destroy() {
-		this.editor.destroy();
+		this.aceEditor.destroy();
 		if (this.container) {
 			this.container.close();
 		}

@@ -8,11 +8,12 @@ module.exports = class Server {
 	}
 
 	post(path, data, success) {
+		let request = typeof data === 'object' ? JSON.stringify(data) : data;
 		$.ajax({
 			url: this.endpoint + path,
 			method: 'POST',
 			contentType: CONTENT_JSON,
-			data: data,
+			data: request,
 			success: response => {
 				if (success) success(response)
 			},

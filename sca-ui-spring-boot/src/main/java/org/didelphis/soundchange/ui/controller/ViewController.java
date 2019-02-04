@@ -21,13 +21,18 @@
 package org.didelphis.soundchange.ui.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.NonNull;
 import org.didelphis.io.DiskFileHandler;
 import org.didelphis.io.FileHandler;
+import org.didelphis.io.MockFileHandler;
 import org.didelphis.language.parsing.ParseException;
 import org.didelphis.language.phonetic.features.FeatureType;
 import org.didelphis.language.phonetic.features.IntegerFeature;
 import org.didelphis.soundchange.ErrorLogger;
+import org.didelphis.soundchange.SoundChangeScript;
+import org.didelphis.soundchange.StandardScript;
 import org.didelphis.soundchange.parser.FileType;
 import org.didelphis.soundchange.parser.ProjectFile;
 import org.didelphis.soundchange.parser.ScriptParser;
@@ -58,7 +63,7 @@ public class ViewController {
 			method   = RequestMethod.POST,
 			consumes = MediaType.APPLICATION_JSON_UTF8_VALUE
 	)
-	public String compile(@RequestBody String mainPath) {
+	public String loadNewProject(@RequestBody String mainPath) {
 		FeatureType<?> type = IntegerFeature.INSTANCE;
 		FileHandler handler = new DiskFileHandler("UTF-8");
 		ErrorLogger errorLogger = new ErrorLogger();
@@ -108,19 +113,117 @@ public class ViewController {
 	}
 
 	@RequestMapping (
-			value    = "/status",
-			method   = RequestMethod.GET
+			value    = "/compileProject",
+			method   = RequestMethod.POST,
+			consumes = MediaType.APPLICATION_JSON_UTF8_VALUE
 	)
-	public String status() {
-		return "Running";
+	public String compileProject(@RequestBody String projectFilesString) {
+
+		JsonNode jsonNode;
+		try {
+			jsonNode = OBJECT_MAPPER.readTree(projectFilesString);
+		} catch (IOException e) {
+			return "{'error':'" + e + '\'';
+		}
+
+		ErrorLogger errorLogger = new ErrorLogger();
+		List<ProjectFile> projectFiles = getProjectFiles(jsonNode);
+		ScriptParser<?> scriptParser = parseProject(projectFiles, errorLogger);
+
+		try {
+			return OBJECT_MAPPER.writeValueAsString(errorLogger);
+		} catch (JsonProcessingException e) {
+			LOG.error("Failed to serialize error logger {}",
+					errorLogger.toString(), e);
+		}
+		return "FAILED";
 	}
 
 	@RequestMapping (
-			value    = "/kill",
-			method   = RequestMethod.GET
+			value    = "/executeProject",
+			method   = RequestMethod.POST,
+			consumes = MediaType.APPLICATION_JSON_UTF8_VALUE
 	)
-	public String kill() {
-		System.exit(0);
-		return "Server Killed";
+	public String executeProject(@RequestBody String projectFilesString) {
+
+		JsonNode jsonNode;
+		try {
+			jsonNode = OBJECT_MAPPER.readTree(projectFilesString);
+		} catch (IOException e) {
+			return "{'error':'" + e + '\'';
+		}
+
+		ErrorLogger errorLogger = new ErrorLogger();
+		List<ProjectFile> projectFiles = getProjectFiles(jsonNode);
+
+		FileHandler handler = toHandler(projectFiles);
+		ProjectFile mainFile = projectFiles.get(0);
+
+		SoundChangeScript<?> script = new StandardScript<>(
+				mainFile.getFilePath(),
+				IntegerFeature.INSTANCE,
+				mainFile.getFileData(),
+				handler,
+				errorLogger
+		);
+		script.process();
+
+		try {
+			return OBJECT_MAPPER.writeValueAsString(errorLogger);
+		} catch (JsonProcessingException e) {
+			LOG.error("Failed to serialize error logger {}",
+					errorLogger.toString(), e);
+		}
+		return "FAILED";
+	}
+
+	@RequestMapping (
+			value    = "/saveProject",
+			method   = RequestMethod.POST,
+			consumes = MediaType.APPLICATION_JSON_UTF8_VALUE
+	)
+	public String saveProject(@RequestBody String projectFilesString) {
+		return "ERROR"; // TODO:
+	}
+
+	private static List<ProjectFile> getProjectFiles(JsonNode jsonNode) {
+		List<ProjectFile> projectFiles = new ArrayList<>();
+		for (JsonNode node : jsonNode) {
+			String fileType = node.get("fileType").asText("");
+			String filePath = node.get("filePath").asText("");
+			String fileData = node.get("fileData").asText("");
+			ProjectFile projectFile = new ProjectFile();
+			projectFile.setFileData(fileData);
+			projectFile.setFilePath(filePath);
+			projectFile.setFileType(FileType.valueOf(fileType));
+			projectFiles.add(projectFile);
+		}
+		return projectFiles;
+	}
+
+	@NonNull
+	private static ScriptParser<?> parseProject(
+			@NonNull List<ProjectFile> projectFiles,
+			@NonNull ErrorLogger errorLogger
+	) {
+		FileHandler handler = toHandler(projectFiles);
+		ProjectFile mainFile = projectFiles.get(0);
+		ScriptParser<?> scriptParser = new ScriptParser<>(
+				mainFile.getFilePath(),
+				IntegerFeature.INSTANCE,
+				mainFile.getFileData(),
+				handler,
+				errorLogger
+		);
+		scriptParser.parse();
+		return scriptParser;
+	}
+
+	private static FileHandler toHandler(List<ProjectFile> projectFiles) {
+		Map<String, String> map = new HashMap<>();
+		for (ProjectFile projectFile : projectFiles) {
+			map.put(projectFile.getFilePath(), projectFile.getFileData());
+		}
+		return new MockFileHandler(map);
 	}
 }
