@@ -81,14 +81,14 @@ public class ViewController {
 			ProjectFile mainFile = new ProjectFile();
 			mainFile.setFileType(FileType.SCRIPT);
 			mainFile.setFileData(data);
-			mainFile.setFilePath(mainPath);
+			mainFile.setAbsolutePath(mainPath);
 
 			List<ProjectFile> files = new ArrayList<>();
 			files.add(mainFile);
 			files.addAll(scriptParser.getProjectFiles());
 
 			List<String> paths = files.stream()
-					.map(file -> file.getFilePath())
+					.map(file -> file.getAbsolutePath())
 					.collect(Collectors.toList());
 
 			FileTreeUtil.Node node = FileTreeUtil.parsePaths(paths);
@@ -160,7 +160,7 @@ public class ViewController {
 		ProjectFile mainFile = projectFiles.get(0);
 
 		SoundChangeScript<?> script = new StandardScript<>(
-				mainFile.getFilePath(),
+				mainFile.getAbsolutePath(),
 				IntegerFeature.INSTANCE,
 				mainFile.getFileData(),
 				handler,
@@ -183,6 +183,16 @@ public class ViewController {
 			consumes = MediaType.APPLICATION_JSON_UTF8_VALUE
 	)
 	public String saveProject(@RequestBody String projectFilesString) {
+
+		JsonNode jsonNode;
+		try {
+			jsonNode = OBJECT_MAPPER.readTree(projectFilesString);
+		} catch (IOException e) {
+			return "{'error':'" + e + '\'';
+		}
+
+		List<ProjectFile> projectFiles = getProjectFiles(jsonNode);
+
 		return "ERROR"; // TODO:
 	}
 
@@ -194,7 +204,7 @@ public class ViewController {
 			String fileData = node.get("fileData").asText("");
 			ProjectFile projectFile = new ProjectFile();
 			projectFile.setFileData(fileData);
-			projectFile.setFilePath(filePath);
+			projectFile.setAbsolutePath(filePath);
 			projectFile.setFileType(FileType.valueOf(fileType));
 			projectFiles.add(projectFile);
 		}
@@ -209,7 +219,7 @@ public class ViewController {
 		FileHandler handler = toHandler(projectFiles);
 		ProjectFile mainFile = projectFiles.get(0);
 		ScriptParser<?> scriptParser = new ScriptParser<>(
-				mainFile.getFilePath(),
+				mainFile.getAbsolutePath(),
 				IntegerFeature.INSTANCE,
 				mainFile.getFileData(),
 				handler,
@@ -222,7 +232,7 @@ public class ViewController {
 	private static FileHandler toHandler(List<ProjectFile> projectFiles) {
 		Map<String, String> map = new HashMap<>();
 		for (ProjectFile projectFile : projectFiles) {
-			map.put(projectFile.getFilePath(), projectFile.getFileData());
+			map.put(projectFile.getAbsolutePath(), projectFile.getFileData());
 		}
 		return new MockFileHandler(map);
 	}

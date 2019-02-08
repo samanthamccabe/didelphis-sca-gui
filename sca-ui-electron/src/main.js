@@ -19,7 +19,7 @@
  ******************************************************************************/
 
 const electron = require('electron');
-const promise  = require('minimal-request-promise');
+const promise  = require('request-promise');
 const path     = require('path');
 const url      = require('url');
 
