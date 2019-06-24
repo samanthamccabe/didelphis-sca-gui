@@ -28,7 +28,7 @@
     <parent>
         <groupId>org.didelphis</groupId>
         <artifactId>didelphis-root</artifactId>
-        <version>0.3.1</version>
+        <version>0.3.3</version>
     </parent>
 
     <name>Didelphis Sound Change Applier UI</name>
@@ -45,9 +45,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <didelphis-sca.version>0.3.2-SNAPSHOT</didelphis-sca.version>
-        <didelphis-common.version>0.3.2-SNAPSHOT</didelphis-common.version>
-        <spring-boot.version>2.0.1.RELEASE</spring-boot.version>
+        <didelphis-sca.version>0.3.3-SNAPSHOT</didelphis-sca.version>
+        <spring-boot.version>2.1.6.RELEASE</spring-boot.version>
     </properties>
 
 </project>

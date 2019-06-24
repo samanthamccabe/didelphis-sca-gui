@@ -14,16 +14,16 @@
   "author": "Samanth F McCabe",
   "license": "GPL-3.0",
   "dependencies": {
-    "request-promise": "^4.2.2",
-    "jquery": "^3.3.1",
-    "jquery-ui": "^1.12.1",
-    "jquery.fancytree": "^2.30.2",
+    "ace-builds": "^1.4.5",
     "golden-layout": "^1.5.9",
-    "ace-builds": "^1.4.2"
+    "jquery": "^3.4.1",
+    "jquery-ui": "^1.12.1",
+    "jquery.fancytree": "^2.31.0",
+    "request-promise": "^4.2.4"
   },
   "devDependencies": {
-    "electron": "^5.0.0-beta.2",
-    "asar": "^0.14.6",
+    "electron": "^5.0.4",
+    "asar": "^2.0.1",
     "electron-package": "^0.1.0"
   }
 }

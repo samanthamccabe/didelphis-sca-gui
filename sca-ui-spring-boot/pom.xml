@@ -54,30 +54,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.didelphis.common</groupId>
-            <artifactId>didelphis-common-language</artifactId>
-            <version>${didelphis-common.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.didelphis.common</groupId>
-            <artifactId>didelphis-common-io</artifactId>
-            <version>${didelphis-common.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.didelphis.common</groupId>
-            <artifactId>didelphis-common-structures</artifactId>
-            <version>${didelphis-common.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.didelphis.common</groupId>
-            <artifactId>didelphis-common-utilities</artifactId>
-            <version>${didelphis-common.version}</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
             <version>${spring-boot.version}</version>
